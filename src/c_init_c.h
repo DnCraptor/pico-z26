@@ -36,23 +36,6 @@ void InitData() {
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
 	
-	for(i = 0; i < 0x2000; i++){
-		ReadAccess[i + 0x2000] = ReadAccess[i];
-		WriteAccess[i + 0x2000] = WriteAccess[i];
-		ReadAccess[i + 0x4000] = ReadAccess[i];
-		WriteAccess[i + 0x4000] = WriteAccess[i];
-		ReadAccess[i + 0x6000] = ReadAccess[i];
-		WriteAccess[i + 0x6000] = WriteAccess[i];
-		ReadAccess[i + 0x8000] = ReadAccess[i];
-		WriteAccess[i + 0x8000] = WriteAccess[i];
-		ReadAccess[i + 0xa000] = ReadAccess[i];
-		WriteAccess[i + 0xa000] = WriteAccess[i];
-		ReadAccess[i + 0xc000] = ReadAccess[i];
-		WriteAccess[i + 0xc000] = WriteAccess[i];
-		ReadAccess[i + 0xe000] = ReadAccess[i];
-		WriteAccess[i + 0xe000] = WriteAccess[i];
-	}
-
 	InitCVars();
 	Init_CPU();
 //	Init_CPUhand();

@@ -19,11 +19,11 @@ dd Address;
 
 #define readbank \
 	bumpclock \
-	ReadAccess[AddressBus]();
+	ReadAccess[AddressBus & 0x1FFF]();
 
 #define writebank \
 	bumpclock \
-	WriteAccess[AddressBus]();
+	WriteAccess[AddressBus & 0x1FFF]();
 
 #define opcode($1, $2, $3) \
 	void $1(void){ \

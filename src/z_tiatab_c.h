@@ -18,7 +18,7 @@
 // 23 22 21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
 //                                  ECX                                   |
 
-dd PFClockToBitReversed[] = {
+const dd PFClockToBitReversed[] = {
     1 << 4,     // 0     forward
     1 << 5,     // 1
     1 << 6,     // 2
@@ -62,7 +62,7 @@ dd PFClockToBitReversed[] = {
     1 << 4      // 39
 };
 
-dd PFClockToBitForward[] = {
+const dd PFClockToBitForward[] = {
     1 << 4,     // 0     forward
     1 << 5,     // 1
     1 << 6,     // 2
@@ -191,7 +191,7 @@ db TIADisplayToColour2[] = {
     3,1,4,1,3,1,4,1,3,1,4,1,3,1,4,1
 };
 
-dd* PF_Table = PFClockToBitForward;         // current pointer to playfield mask bits
+const dd* PF_Table = PFClockToBitForward;   // current pointer to playfield mask bits
 db* PixelColorTable = TIADisplayToColour;   // pixel to color translation table
 
 // ;*
@@ -803,7 +803,7 @@ db P1_Sprite[] = {LeadingPlayer};
 
 
 #define M4 0        // I'm not actually sure if this should be zero or -4.
-int DeepHMOVE[] = {
+const int DeepHMOVE[] = {
 /* 0 */
  0,0,0,0,0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 0 */
  0,0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 1 */
@@ -1078,7 +1078,7 @@ int DeepHMOVE[] = {
  0,0,0,0,0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* f */
 };
 
-dd WeirdRespCorrection[] = {
+const dd WeirdRespCorrection[] = {
     0,  0,  0,  0,  0,  0,  1,  2,  2,  3,
     4,  5,  5,  6,  7,  8,  8,  9, 10, 11,
    11, 12, 13, 14, 14, 15
@@ -1112,14 +1112,14 @@ db TIAReflect8[] = {
     15,143,79,207,47,175,111,239,31,159,95,223,63,191,127,255
 };
 
-dd MissileOffset[] = { 5, 5, 5, 5, 5, 8, 5, 12 };
+const dd MissileOffset[] = { 5, 5, 5, 5, 5, 8, 5, 12 };
 
-dd MaxMotion[] = {
+const dd MaxMotion[] = {
     7,  7,  7,  7,  6,  5,  5,  4,  3,  2,
     2,  1,  0, -1, -1, -2, -3, -4, -4, -5,
     -6
 };
 
-dd HiTable[] = { 
+const dd HiTable[] = {
     14, 13, 12, 12, 11, 10, 9, 9, 8, 7, 6, 6, 5, 4, 3, 3, 2, 1, 0, 0 
 };

@@ -56,7 +56,7 @@ void Init_SDL()
 	screen_buffer_count = 0;
 	
 	ScreenBuffer = RealScreenBuffer1;
-	ScreenBufferPrev = RealScreenBuffer2;
+	///ScreenBufferPrev = RealScreenBuffer2;
 	
 	ClearScreenBuffers();
 }

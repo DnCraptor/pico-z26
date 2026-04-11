@@ -9,7 +9,7 @@
 void ClearScreenBuffers()
 {
 	memset(RealScreenBuffer1, 0,    MaxLines*tiawidth);
-	memset(RealScreenBuffer2, 0x80, MaxLines*tiawidth);
+///	memset(RealScreenBuffer2, 0x80, MaxLines*tiawidth);
 ///	memset(texture_buffer, 0, 4*1280*1280);
 }
 

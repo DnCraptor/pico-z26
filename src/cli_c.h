@@ -135,7 +135,7 @@ int cli_calc_CRC(char *filename)
 
 	while ( (ch = getc(fp)) != EOF )
 	{
-		if (CartSize >= sizeof(CartRom)) break;
+		if (CartSize >= 0x80000) break;
 		++CartSize;
 		*p++ = (db) ch;
 		ucrc(ch);
@@ -520,7 +520,7 @@ void cli_SaveParms()
 }
 
 
-void cli_ReadParms(char *Filename)
+void cli_ReadParms(const char *Filename)
 {
 	int ch, i;
 	FILE *fp;

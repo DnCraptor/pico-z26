@@ -48,27 +48,7 @@ dd LastAddressBus4A50 = 0xffff;	/* state of AddressBus on last cycle */
 	
 */
 
-void Copy64K(void){
-	int i;
-	
-	for(i = 0; i < 0x2000; i++){
-		ReadAccess[i + 0x2000] = ReadAccess[i];
-		WriteAccess[i + 0x2000] = WriteAccess[i];
-		ReadAccess[i + 0x4000] = ReadAccess[i];
-		WriteAccess[i + 0x4000] = WriteAccess[i];
-		ReadAccess[i + 0x6000] = ReadAccess[i];
-		WriteAccess[i + 0x6000] = WriteAccess[i];
-		ReadAccess[i + 0x8000] = ReadAccess[i];
-		WriteAccess[i + 0x8000] = WriteAccess[i];
-		ReadAccess[i + 0xa000] = ReadAccess[i];
-		WriteAccess[i + 0xa000] = WriteAccess[i];
-		ReadAccess[i + 0xc000] = ReadAccess[i];
-		WriteAccess[i + 0xc000] = WriteAccess[i];
-		ReadAccess[i + 0xe000] = ReadAccess[i];
-		WriteAccess[i + 0xe000] = WriteAccess[i];
-	}
-}
-
+#define Copy64K(x)
 
 void ReadROM2K(void){
 	
@@ -451,17 +431,18 @@ void Init3E(void){
 	the $F000 - $FFFF bank is in the ROM image first, the $D000 - $DFFF bank is last.
 */
 void InitFE(void){
-	int i, j;
+	int i, j = 0;
 	
-	for(j = 0; j < 2; j++){
+///	for(j = 0; j < 2; j++){
 		for(i = 0; i < 0x1000; i++){
 			ReadAccess[j * 0x2000 + i] = TIARIOTReadAccess[i];
 			WriteAccess[j * 0x2000 + i] = TIARIOTWriteAccess[i];
-			ReadAccess[0x3000 + i] = &ReadROM4K;
+		///	ReadAccess[0x3000 + i] = &ReadROM4K; /// TODO: special W/A for FE-mapper
 			ReadAccess[0x1000 + i] = &ReadBSFE;
 			WriteAccess[j * 0x2000 + 0x1000 + i] = &WriteROM4K;
 		}
-	}
+///	}
+/**
 	for(i = 0; i < 0x4000; i++){
 		ReadAccess[i + 0x4000] = ReadAccess[i];
 		WriteAccess[i + 0x4000] = WriteAccess[i];
@@ -469,7 +450,7 @@ void InitFE(void){
 		WriteAccess[i + 0x8000] = WriteAccess[i];
 		ReadAccess[i + 0xc000] = ReadAccess[i];
 		WriteAccess[i + 0xc000] = WriteAccess[i];
-	}
+	}*/
 }
 
 

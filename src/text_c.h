@@ -2,7 +2,7 @@
 ** text.c -- text display
 */
 
-char simplex5[] =
+static const char simplex5[] =
 {
 	/* 0000 */	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	/* 0008 */	0x38, 0x44, 0x92, 0xba, 0x92, 0x44, 0x38, 0x00, 
@@ -135,7 +135,7 @@ char simplex5[] =
 	/* 0400 */	0x0a
 };
 
-char tiny5[] =
+static const char tiny5[] =
 {
 	/* 0000 */	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 	/* 0008 */	0x38, 0x44, 0x92, 0xba, 0x92, 0x44, 0x38, 0x00, 
@@ -302,10 +302,10 @@ int get_offset() {		// put FPS display at bottom of screen
 ** our "screen" is 53 characters wide and 28 characters high
 */
 
-void draw_char(char ch, char* font, char* surface, int fontheight, int row, int col, int fg, int bg)
+void draw_char(char ch, const char* font, char* surface, int fontheight, int row, int col, int fg, int bg)
 {
 	int i,j;
-	char *fp;	/* font pointer */
+	const char *fp;	/* font pointer */
 	char *sp;	/* surface pointer */
 	char fbyte;	/* font byte */
 	

@@ -32,20 +32,22 @@
 #define HOME_DIR "\\z26"
 extern char __flash_binary_end;
 #define FLASH_TARGET_OFFSET (((((uintptr_t)&__flash_binary_end - XIP_BASE) / FLASH_SECTOR_SIZE) + 4) * FLASH_SECTOR_SIZE)
-static const uintptr_t rom = XIP_BASE + FLASH_TARGET_OFFSET;
 
 extern "C" {
 const char* homedir = HOME_DIR;
-char z26cli[1024] = {0};
-char z26gui[1024] = {0};
-char z26home[1024] = {0};
-char z26log[1024] = {0};
-char z26wav[1024] = {0};
+const char* z26cli = HOME_DIR "\\z26.cli";
+const char* z26gui = HOME_DIR "\\z26.gui";
+const char* z26home = HOME_DIR;
+const char* z26log = HOME_DIR "\\z26.log";
+const char* z26wav = HOME_DIR "\\z26.wav";
 
+typedef float math_t;
 typedef unsigned long long int  dq;
 typedef unsigned int			dd;
 typedef unsigned short int		dw;
 typedef unsigned char			db;
+
+static db* CartRom = (db*)(XIP_BASE + FLASH_TARGET_OFFSET); // TODO: const
 
 void position_game(void);
 void show_transient_status(void);
@@ -56,6 +58,8 @@ void draw_trace_column_headers(void);
 
 #include <math.h>
 #include <ctype.h>
+#include "fatfs_stdio.h"
+
 #include "globals_c.h"
 #include "palette_c.h"
 #include "vcs_slot_c.h"
@@ -73,11 +77,6 @@ void draw_trace_column_headers(void);
 #include "2600core_c.h"
 }
 
-uint8_t * ROM = (uint8_t *) rom;
-
-alignas(4) uint8_t RAM[1024] = { 0xFF };
-alignas(4) uint8_t VRAM[16384];
-
 char __uninitialized_ram(filename[256]);
 static uint32_t __uninitialized_ram(rom_size) = 0;
 
@@ -85,8 +84,6 @@ static FATFS fs;
 bool reboot = false;
 bool limit_fps = true;
 semaphore vga_start_semaphore;
-
-uint8_t SCREEN[150][160];
 
 uint32_t rgb0;
 uint32_t rgb1;
@@ -271,8 +268,8 @@ typedef struct __attribute__((__packed__)) {
     char filename[79];
 } file_item_t;
 
-constexpr int max_files = 300;
-file_item_t * fileItems = (file_item_t *)(&SCREEN[0][0] + TEXTMODE_COLS*TEXTMODE_ROWS*2);
+file_item_t * fileItems = (file_item_t *)(RealScreenBuffer1 + TEXTMODE_COLS*TEXTMODE_ROWS*2);
+constexpr int max_files = (sizeof(RealScreenBuffer1) - TEXTMODE_COLS*TEXTMODE_ROWS*2) / sizeof(file_item_t);
 
 int compareFileItems(const void* a, const void* b) {
     const auto* itemA = (file_item_t *)a;
@@ -620,7 +617,7 @@ bool __not_in_flash_func(overclock)() {
 bool save() {
     int tmp_data[8];
     char pathname[255];
-#if 1
+#if 0
     if (settings.save_slot > 0) {
         sprintf(pathname, "%s\\%s_%d.save",  HOME_DIR, filename, settings.save_slot);
     }
@@ -644,8 +641,7 @@ bool save() {
 bool load() {
     int tmp_data[8];
     char pathname[255];
-#if 1
-
+#if 0
     if (settings.save_slot > 0) {
         sprintf(pathname, "%s\\%s_%d.save",  HOME_DIR, filename, settings.save_slot);
     }
@@ -1051,7 +1047,7 @@ void __time_critical_func(render_core)() {
     InitAY();
 #endif
 
-    const auto buffer = (uint8_t *)SCREEN;
+    const auto buffer = (uint8_t*)RealScreenBuffer1;
     graphics_set_buffer(buffer, 160, 150);
     graphics_set_textbuffer(buffer);
     graphics_set_bgcolor(0x000000);
@@ -1122,15 +1118,6 @@ int __time_critical_func(main)() {
     update_palette();
 
     ns_time_init();
-	strncpy(z26home, homedir, sizeof(z26home)-1);
-	strncpy(z26gui, homedir, sizeof(z26gui)-1);
-	strncpy(z26cli, homedir, sizeof(z26cli)-1);
-	strncpy(z26log, homedir, sizeof(z26log)-1);
-	strncpy(z26wav, homedir, sizeof(z26wav)-1);
-	strncat(z26gui, "\\z26.gui", sizeof(z26gui)-1);
-	strncat(z26cli, "\\z26.cli", sizeof(z26cli)-1);
-	strncat(z26log, "\\z26.log", sizeof(z26log)-1);
-	strncat(z26wav, "\\z26.wav", sizeof(z26wav)-1);
 	srand(time_us_64() & 0xFFFFFFFF);
 	def_LoadDefaults();
     LaunchedFromCommandline = 1;
@@ -1141,7 +1128,7 @@ int __time_critical_func(main)() {
     while (true) {
         graphics_set_mode(TEXTMODE_DEFAULT);
         filebrowser(HOME_DIR, "bin,a26,rom");
-        graphics_set_buffer((uint8_t *)SCREEN, 160, 150);
+        graphics_set_buffer((uint8_t*)RealScreenBuffer1, 160, 150);
 
 #if VGA
         if (settings.aspect_ratio) {
@@ -1157,8 +1144,6 @@ int __time_critical_func(main)() {
 #endif
 
         start_time = time_us_64();
-        memset(RAM, 0xFF, sizeof(RAM));
-        memset(VRAM, 0x0, sizeof(VRAM));
 
         while (!reboot) {
             if (fxPressedV) {

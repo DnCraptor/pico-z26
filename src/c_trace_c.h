@@ -21,7 +21,7 @@ enum {_imp, _acc, _rel, _imm, _abs, _abs_x, _abs_y, _zero, _zero_x, _zero_y, _in
 
 
 typedef char InstName[4];
-InstName InstList[256]={
+static const InstName InstList[256]={
 	 "brk", "ora", "jam",	"slo", "nop", "ora", "asl",	"slo",
 	 "php", "ora", "asl",	"anc", "nop", "ora", "asl",	"slo",
 
@@ -71,7 +71,7 @@ InstName InstList[256]={
 	 "sed", "sbc", "nop",	"isb", "nop", "sbc", "inc",	"isb"
 };
 
-int AccessList[256] = {
+static const int AccessList[256] = {
 	 _imp, _ind_x, _imp, _ind_x, _zero,   _zero,   _zero,   _zero,
 	 _imp, _imm,   _acc,  _imm,   _abs,    _abs,    _abs,    _abs,
 
@@ -122,7 +122,7 @@ int AccessList[256] = {
 };
 
 typedef char TIAname[8];
-TIAname TIAList[0x40] = {
+static const TIAname TIAList[0x40] = {
 	 "VSYNC", "VBLANK", "WSYNC", "*RSYNC*", "NUSIZ0", "NUSIZ1", "COLUP0", "COLUP1",
 	 "COLUPF", "COLUBK", "CTRLPF", "REFP0", "REFP1", "PF0", "PF1", "PF2",
 	 "RESP0", "RESP1", "RESM0", "RESM1", "RESBL", "AUDC0", "AUDC1", "AUDF0",
@@ -135,12 +135,12 @@ TIAname TIAList[0x40] = {
 };
 
 typedef char RIOTname[7];
-RIOTname RIOTList1[8] = {
+static const RIOTname RIOTList1[8] = {
 	 "SWCHA", "SWACNT", "SWCHB", "SWBCNT",
 	 "INTIM", "TIMINT", "intim", "timint"
 };
 
-RIOTname RIOTList2[4] = {
+static const RIOTname RIOTList2[4] = {
 	 "TIM1T", "TIM8T", "TIM64T", "T1024T"
 };
 
@@ -172,7 +172,7 @@ unsigned char ReadROM(unsigned int adr)
 		AddressBus = (adr & 0xffff);
 		debugflag = 1;
 		AddressBus = adr;
-		ReadAccess[AddressBus]();
+		ReadAccess[AddressBus & 0x1FFF]();
 		debugflag = 0;
 		cpu_Rbyte = DataBus;
 

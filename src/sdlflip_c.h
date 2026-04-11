@@ -2,9 +2,9 @@
 ** sdlflip.c -- SDL page flipping code
 */
 
-double	CurrentFPS = 0.0;
-double	FPStime = 0.0;
-double  TotalTime = 0.0;
+math_t	CurrentFPS = 0.0;
+math_t	FPStime = 0.0;
+math_t  TotalTime = 0.0;
 int	    FPSflips = 0;
 
 // monotonic clock in nanoseconds
@@ -45,7 +45,7 @@ static long long int ns_time()
     return (systick_accum * 1000000000ULL) / cpu_hz;
 }
 
-double srv_get_nanoseconds()
+math_t srv_get_nanoseconds()
 {
 	long long int nsec;
 	nsec = ns_time();
@@ -72,12 +72,12 @@ void srv_Flip()
 	if (screen_buffer_count ^= 1)
 	{
 		ScreenBuffer = RealScreenBuffer1;
-		ScreenBufferPrev = RealScreenBuffer2;
+	///	ScreenBufferPrev = RealScreenBuffer2;
 	}
 	else
 	{
-		ScreenBuffer = RealScreenBuffer2;
-		ScreenBufferPrev = RealScreenBuffer1;
+		ScreenBuffer = RealScreenBuffer1;
+	///	ScreenBufferPrev = RealScreenBuffer1;
 	}
 }
 

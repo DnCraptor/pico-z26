@@ -9,7 +9,7 @@ dd kv_TapeBusy;
 int kv_FilePointer, kv_SharedData, kv_Beep;
 unsigned long int kv_SongCounter=0;
 
-unsigned char SongPositions[44+38+42+62+80+62] = {
+static const unsigned char SongPositions[44+38+42+62+80+62] = {
 /* kvs1 44 */
    11, 12+0x80, 13+0x80, 14, 15+0x80, 16, 8+0x80, 17, 18+0x80, 19, 20+0x80, 21,
    8+0x80, 22, 15+0x80, 23, 18+0x80, 14, 20+0x80, 16, 18+0x80, 17, 15+0x80, 19,
@@ -165,9 +165,9 @@ unsigned long int SongStart[104] = {
 
 void kv_OpenSampleFile(void)
 {
-char kvNameTable[6][9] =
+static const char kvNameTable[6][9] =
    {"KVS3.WAV", "KVS1.WAV", "KVS2.WAV", "KVB3.WAV", "KVB1.WAV", "KVB2.WAV"};
-int StartSong[6] = {44+38, 0, 44, 44+38+42+62+80, 44+38+42, 44+38+42+62};
+static const int StartSong[6] = {44+38, 0, 44, 44+38+42+62+80, 44+38+42, 44+38+42+62};
 int i;
    if(!KidvidFileOpened){
       if(KidVid==0x44) i=0;

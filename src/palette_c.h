@@ -6,10 +6,10 @@
 ** Inspired by tia.cpp in mame 0.212 by Wilbert Pol and Stefan Jokisch.
 */
 
-double brightness = 1.0;
-double warmth = 0.0;
+math_t brightness = 1.0;
+math_t warmth = 0.0;
 
-double NTSC_PS = 26.2;	// tunable phase shift
+math_t NTSC_PS = 26.2;	// tunable phase shift
 			// 25.714 -- chroma1   == chroma15
 			// 26.572 -- chroma1.5 == chroma15 (perfect split)
 			// 27.429 -- chroma2   == chroma15
@@ -18,19 +18,19 @@ double NTSC_PS = 26.2;	// tunable phase shift
 			// 26.2 -- mame 0.212 approximately
 			// 26.7 -- Sunnyvale 4-switch (20190820)
 
-double PAL_PS = 21.5;	// tunable phase shift
+math_t PAL_PS = 21.5;	// tunable phase shift
 			// 21.68859 -- middle of the range
 			// 21.50    -- vintage z26 approximately
 			// 21.50	-- mame 0.212 approximately
 
-double NTSC_luma[] = {0.08,0.15,0.26,0.40,0.52,0.65,0.76,0.84};
-double PAL_luma[]  = {0.08,0.15,0.26,0.40,0.52,0.65,0.76,0.84};
+static const math_t NTSC_luma[] = {0.08,0.15,0.26,0.40,0.52,0.65,0.76,0.84};
+static const math_t PAL_luma[]  = {0.08,0.15,0.26,0.40,0.52,0.65,0.76,0.84};
 //                    00   02   04   06   08   0A   0C   0E
 
 // phase corrections since the 2600 doesn't generate perfect sine waves
 // Set corrections for chroma1 and chromaF to be the same to get
 // phase shift numbers to match mame numbers.
-double NTSC_corr[] = 
+static const math_t NTSC_corr[] = 
 	{ 0.0, 0.4, 0.4, 0.0,-0.1, 0.1, 0.5, 0.6, 0.5, 0.4, 0.0,-0.0,-0.2,-0.4, 0.5, 0.4 };
 //    0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
 
@@ -42,18 +42,18 @@ void NTSC_Palette()
 {
 	int chroma, luma, i;
 
-	double color[16][2] = {{0.0}};
-	double pi = 4*atan(1);
-	double A = 0.225;
-//	double delta_scale = (8.0+CORR1)/8.0;
-//	double delta =  delta_scale * NTSC_PS * (2*pi/360);
+	math_t color[16][2] = {{0.0}};
+	math_t pi = 4*atan(1);
+	math_t A = 0.225;
+//	math_t delta_scale = (8.0+CORR1)/8.0;
+//	math_t delta =  delta_scale * NTSC_PS * (2*pi/360);
 
-	double delta = NTSC_PS * (2*pi/360);
-//	double P0 = 0.23;	// .30
+	math_t delta = NTSC_PS * (2*pi/360);
+//	math_t P0 = 0.23;	// .30
 
 	for (i=1; i<16; i++)
 	{	
-		double corr = delta * NTSC_corr[i];
+		math_t corr = delta * NTSC_corr[i];
 
 		color[i][0] = A * sin(delta*i + corr);
 		color[i][1] = A * sin(delta*(i-pi) + corr);
@@ -61,9 +61,9 @@ void NTSC_Palette()
 
 	for (chroma = 0; chroma < 16; chroma++)
 	{
-		double I = color[chroma][0];
-		double Q = color[chroma][1];
-		double Y, R, G, B = 0.0;
+		math_t I = color[chroma][0];
+		math_t Q = color[chroma][1];
+		math_t Y, R, G, B = 0.0;
 
 		for (luma=0; luma<=7; luma++)
 		{
@@ -110,11 +110,11 @@ void PAL_Palette()
 {
 	int chroma, luma, i;
 
-	double color[16][2] = {{0.0}};
-	double pi = 4*atan(1);
+	math_t color[16][2] = {{0.0}};
+	math_t pi = 4*atan(1);
 
-	double A = 0.225;	// .225
-	double delta = PAL_PS * (2*pi/360);
+	math_t A = 0.225;	// .225
+	math_t delta = PAL_PS * (2*pi/360);
 
 	for (i=2; i<14; i++)
 	{	
@@ -126,9 +126,9 @@ void PAL_Palette()
 
 	for (chroma = 0; chroma < 16; chroma++)
 	{
-		double U = color[chroma][0];
-		double V = color[chroma][1];
-		double Y, R, G, B = 0.0;
+		math_t U = color[chroma][0];
+		math_t V = color[chroma][1];
+		math_t Y, R, G, B = 0.0;
 
 		for (luma=0; luma<=7; luma++)
 		{
@@ -480,7 +480,7 @@ void mame_NTSC_Palette(void)
 	/*********************************
 	Phase Shift 26.2
 	**********************************/
-	double color[16][2] =
+	math_t color[16][2] =
 	{
 		{  0.000,  0.000 },
 		{  0.192, -0.127 },
@@ -502,16 +502,16 @@ void mame_NTSC_Palette(void)
 
 	for (int i = 0; i < 16; i++)
 	{
-		double const I = color[i][0];
-		double const Q = color[i][1];
+		math_t const I = color[i][0];
+		math_t const Q = color[i][1];
 
 		for (int j = 0; j < 8; j++)
 		{
-			double const Y = j / 7.0;
+			math_t const Y = j / 7.0;
 
-			double R = Y + 0.956 * I + 0.621 * Q;
-			double G = Y - 0.272 * I - 0.647 * Q;
-			double B = Y - 1.106 * I + 1.703 * Q;
+			math_t R = Y + 0.956 * I + 0.621 * Q;
+			math_t G = Y - 0.272 * I - 0.647 * Q;
+			math_t B = Y - 1.106 * I + 1.703 * Q;
 
 			if (R < 0) R = 0;
 			if (G < 0) G = 0;
@@ -536,7 +536,7 @@ void mame_NTSC_Palette(void)
 
 void mame_PAL_Palette(void)
 {
-	double color[16][2] =
+	math_t color[16][2] =
 	{
 		{  0.000,  0.000 },
 		{  0.000,  0.000 },
@@ -558,16 +558,16 @@ void mame_PAL_Palette(void)
 
 	for (int i = 0; i < 16; i++)
 	{
-		double const U = color[i][0];
-		double const V = color[i][1];
+		math_t const U = color[i][0];
+		math_t const V = color[i][1];
 
 		for (int j = 0; j < 8; j++)
 		{
-			double const Y = j / 7.0;
+			math_t const Y = j / 7.0;
 
-			double R = Y + 1.403 * V;
-			double G = Y - 0.344 * U - 0.714 * V;
-			double B = Y + 1.770 * U;
+			math_t R = Y + 1.403 * V;
+			math_t G = Y - 0.344 * U - 0.714 * V;
+			math_t B = Y + 1.770 * U;
 
 			if (R < 0) R = 0;
 			if (G < 0) G = 0;
