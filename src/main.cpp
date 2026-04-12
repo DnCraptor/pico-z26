@@ -82,13 +82,7 @@ static uint32_t __uninitialized_ram(rom_size) = 0;
 
 static FATFS fs;
 bool reboot = false;
-bool limit_fps = false;
 semaphore vga_start_semaphore;
-
-uint32_t rgb0;
-uint32_t rgb1;
-uint32_t rgb2;
-uint32_t rgb3;
 
 SETTINGS settings = {
     .version = 1,
@@ -98,11 +92,6 @@ SETTINGS settings = {
     .palette = 0,
     .save_slot = 0,
     .tba = 0,
-    .rgb0 = 0xCCFFFF,
-    .rgb1 = 0xFFB266,
-    .rgb2 = 0xCC0066,
-    .rgb3 = 0x663300,
-    .instant_ignition = false
 };
 
 kbd_t keyboard = {
@@ -643,10 +632,6 @@ void load_config() {
         f_read(&file, &settings, sizeof(settings), &bytes_read);
         f_close(&file);
     }
-    rgb0 = settings.rgb0;
-    rgb1 = settings.rgb1;
-    rgb2 = settings.rgb2;
-    rgb3 = settings.rgb3;
 }
 
 void save_config() {
@@ -761,51 +746,17 @@ const MenuItem menu_items[] = {
 };
 #define MENU_ITEMS_NUMBER (sizeof(menu_items) / sizeof (MenuItem))
 
-static inline uint32_t fast1of32(uint32_t v, int i) {
-///    return (uint32_t)((v / 32.0) * (i + 1)) & 0xFF;
-    v -= (31 - i);
-    if (v > 0xFF) v = 0;
-    return v;
-}
-
 static inline void update_palette() {
-    /*
-    if (count_of(palettes) <= settings.palette) {
-        rgb0 = settings.rgb0;
-        rgb1 = settings.rgb1;
-        rgb2 = settings.rgb2;
-        rgb3 = settings.rgb3;
-    } else {
-        const uint8_t* palette = palettes[settings.palette];
-        rgb0 = RGB888(palette[0], palette[1], palette[2]);
-        rgb1 = RGB888(palette[3], palette[4], palette[5]);
-        rgb2 = RGB888(palette[6], palette[7], palette[8]);
-        rgb3 = RGB888(palette[9], palette[10], palette[11]);
-    }*/
-    uint32_t r, g, b;
-    r = rgb0 >> 16;
-    g = (rgb0 >> 8) & 0xFF;
-    b = rgb0 & 0xFF;
-    for (int i = 0; i < 32; ++i) {
-        graphics_set_palette(i, RGB888(fast1of32(r, i), fast1of32(g, i), fast1of32(b, i)));
-    }
-    r = rgb1 >> 16;
-    g = (rgb1 >> 8) & 0xFF;
-    b = rgb1 & 0xFF;
-    for (int i = 0; i < 32; ++i) {
-        graphics_set_palette(i + 32, RGB888(fast1of32(r, i), fast1of32(g, i), fast1of32(b, i)));
-    }
-    r = rgb2 >> 16;
-    g = (rgb2 >> 8) & 0xFF;
-    b = rgb2 & 0xFF;
-    for (int i = 0; i < 32; ++i) {
-        graphics_set_palette(i + 64, RGB888(fast1of32(r, i), fast1of32(g, i), fast1of32(b, i)));
-    }
-    r = rgb3 >> 16;
-    g = (rgb3 >> 8) & 0xFF;
-    b = rgb3 & 0xFF;
-    for (int i = 0; i < 32; ++i) {
-        graphics_set_palette(i + 96, RGB888(fast1of32(r, i), fast1of32(g, i), fast1of32(b, i)));
+    // Сначала сгенерировать PCXPalette через z26-функции
+    GeneratePalette();  // заполняет PCXPalette[128*3]
+
+    // Затем передать все 128 цветов в аппаратную палитру murmulator
+    for (int i = 0; i < 128; i++) {
+        graphics_set_palette(i, RGB888(
+            PCXPalette[i * 3 + 0],
+            PCXPalette[i * 3 + 1],
+            PCXPalette[i * 3 + 2]
+        ));
     }
 }
 
@@ -1057,9 +1008,6 @@ void __time_critical_func(render_core)() {
     __unreachable();
 }
 
-int frame, frame_cnt = 0;
-int frame_timer_start = 0;
-
 int __time_critical_func(main)() {
     overclock();
 
@@ -1079,7 +1027,6 @@ int __time_critical_func(main)() {
     }
 
     load_config();
-    update_palette();
 
     ns_time_init();
 	srand(time_us_64() & 0xFFFFFFFF);
@@ -1104,12 +1051,12 @@ int __time_critical_func(main)() {
         InitData();          // таблицы диспетчера, CPU, TIA, RIOT
         Init_Service();      // буферы экрана
         Controls();          // начальное состояние контроллеров
+        update_palette();
         
-        start_time = time_us_64();
-
         while (!ExitEmulator && !reboot) {
             if (ResetEmulator) Reset_emulator();
 
+            start_time = time_us_64();
             srv_Events();
             if (srv_done) break;
 
@@ -1133,13 +1080,11 @@ int __time_critical_func(main)() {
                 menu();
             }
 
-            if (limit_fps) {
-                if (++frame_cnt == 6) {
-                    while (time_us_64() - frame_timer_start < 16666 * 6);  // 60 Hz
-                    frame_timer_start = time_us_64();
-                    frame_cnt = 0;
-                }
-            }
+            // синхронизация: NTSC = 16666 мкс/кадр, PAL = 20000 мкс/кадр
+            uint32_t frame_us = (PaletteNumber == 1) ? 20000 : 16666;
+            uint64_t elapsed = time_us_64() - start_time;
+            if (elapsed < frame_us)
+                sleep_us(frame_us - elapsed);
 
             tight_loop_contents();
         }
