@@ -989,9 +989,19 @@ void __time_critical_func(render_core)() {
 
 #ifndef HWAY
         if (tick >= last_sound_tick + (1000000 / AUDIO_FREQ)) {
-//            PSG_calc_stereo(&psg, audio_buffer, AUDIO_BUFFER_LENGTH);
-            i2s_dma_write(&i2s_config, audio_buffer);
             last_sound_tick = tick;
+            int n = i2s_config.dma_trans_count;  // сколько стерео-пар нужно
+            for (int i = 0; i < n; i++) {
+                int16_t sample = 0;
+                if (SQ_Count() > 0) {
+                    // SQ_byte: 0..127, центр ~64. Масштабируем в int16.
+                    sample = ((int16_t)(*SQ_Output++) - 64) * 400;
+                    if (SQ_Output >= SQ_Top) SQ_Output = SoundQ;
+                }
+                audio_buffer[i * 2]     = sample;  // Left
+                audio_buffer[i * 2 + 1] = sample;  // Right (дублируем моно)
+            }
+            i2s_dma_write(&i2s_config, audio_buffer);
         }
 #endif
         tick = time_us_64();
