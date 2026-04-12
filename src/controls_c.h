@@ -204,8 +204,10 @@ void DoBoosterGrip_L()
 	ChargeTrigger0[1] = CHARGEMAX;
 	if (KeyboardEnabled)
 	{
+#ifdef KEYTABLESIZE
 		if (KeyTable[P1TriggerBG]) ChargeTrigger0[0] = 0;
 		if (KeyTable[P1BoosterBG]) ChargeTrigger0[1] = 0;
+#endif
 	}
 	if (JoystickEnabled)
 	{
@@ -220,8 +222,10 @@ void DoBoosterGrip_R()
 	ChargeTrigger0[3] = CHARGEMAX;
 	if (KeyboardEnabled)
 	{
+#ifdef KEYTABLESIZE
 		if (KeyTable[P2TriggerBG]) ChargeTrigger0[2] = 0;
 		if (KeyTable[P2BoosterBG]) ChargeTrigger0[3] = 0;
+#endif
 	}
 	if (JoystickEnabled)
 	{
@@ -273,6 +277,7 @@ void DoJoystick_L()
 		if (srv_mouse_button) InputLatch[0] = 0x00;
 	}
 
+#ifdef KEYTABLESIZE
 	if (KeyboardEnabled)
 	{
 		if (KeyTable[P1Right]) IOPortA = IOPortA & 0x7f;
@@ -282,6 +287,7 @@ void DoJoystick_L()
 		if (KeyTable[P1Fire]) InputLatch[0] = 0x00;
 
 	}
+#endif
 
 	// gamepad1 -> левый порт (P0)
     if (gamepad1_bits.right || keyboard.bits.right)  IOPortA = IOPortA & 0x7f;
@@ -316,6 +322,7 @@ void DoJoystick_R()
 {
 	IOPortA = IOPortA | 0x0f;
 	InputLatch[1] = 0x80;
+#ifdef KEYTABLESIZE
 	if (KeyboardEnabled)
 	{
 		if (KeyTable[P2Right]) IOPortA = IOPortA & 0xf7;
@@ -324,7 +331,7 @@ void DoJoystick_R()
 		if (KeyTable[P2Up]) IOPortA = IOPortA & 0xfe;
 		if (KeyTable[P2Fire]) InputLatch[1] = 0x00;
 	}
-
+#endif
 	// gamepad2 -> правый порт (P1)
     if (gamepad2_bits.right)  IOPortA = IOPortA & 0xf7;
     if (gamepad2_bits.left)   IOPortA = IOPortA & 0xfb;
@@ -368,6 +375,7 @@ void DoPaddle_L()
 	Button[0] = 0;
 	Button[1] = 0;
 
+#ifdef KEYTABLESIZE
 	if (KeyboardEnabled)
 	{
 		if (KeyRepeat0)
@@ -413,7 +421,7 @@ void DoPaddle_L()
 		if (KeyTable[P1Fire]) Button[0] = 1;
 		if (KeyTable[P1BoosterBG]) Button[1] = 1;
 	}
-
+#endif
 	if (MouseEnabled)
 	{
 		if ((MouseBaseX == 0) || (MouseBaseX == 1))
@@ -563,6 +571,7 @@ void DoPaddle_R()
 	Button[0] = 0;
 	Button[1] = 0;
 
+#ifdef KEYTABLESIZE
 	if (KeyboardEnabled)
 	{
 		if (KeyRepeat0)
@@ -608,7 +617,7 @@ void DoPaddle_R()
 		if (KeyTable[P2Fire]) Button[0] = 1;
 		if (KeyTable[P2BoosterBG]) Button[1] = 1;
 	}
-
+#endif
 	if (MouseEnabled)
 	{
 		if ((MouseBaseX == 2) || (MouseBaseX == 3))
@@ -750,6 +759,7 @@ void DoKeypad_L()
 	ChargeTrigger0[0] = 0;	/* will expire immediately / will be read as 0x80 */
 	ChargeTrigger0[1] = 0;
 	
+#ifdef KEYTABLESIZE
 	if (!(IOPortA & 0x80))
 	{
 		if (KeyTable[P1PadPound]) InputLatch[0] = 0;
@@ -774,6 +784,7 @@ void DoKeypad_L()
 		if (KeyTable[P1Pad1]) ChargeTrigger0[0] = CHARGEMAX;
 		if (KeyTable[P1Pad2]) ChargeTrigger0[1] = CHARGEMAX;
 	}
+#endif
 }
 
 void DoKeypad_R()
@@ -782,6 +793,7 @@ void DoKeypad_R()
 	ChargeTrigger0[2] = 0;	/* will expire immediately / will be read as 0x80 */
 	ChargeTrigger0[3] = 0;
 	
+#ifdef KEYTABLESIZE
 	if (!(IOPortA & 0x08))
 	{
 		if (KeyTable[P2PadPound]) InputLatch[1] = 0;
@@ -806,6 +818,7 @@ void DoKeypad_R()
 		if (KeyTable[P2Pad1]) ChargeTrigger0[2] = CHARGEMAX;
 		if (KeyTable[P2Pad2]) ChargeTrigger0[3] = CHARGEMAX;
 	}
+#endif
 }
 
 unsigned char DCTable[4] = {0x0f, 0x0d, 0x0c, 0x0e};
@@ -816,12 +829,14 @@ void DoDriving_L()
 
 	InputLatch[0] = 0x80;
 
+#ifdef KEYTABLESIZE
 	if (KeyboardEnabled)
 	{
 		if (KeyTable[P1Right]) count++;
 		if (KeyTable[P1Left]) count--;
 		if (KeyTable[P1Fire]) InputLatch[0] = 0x00;
 	}
+#endif
 
 	if (MouseEnabled)
 	{
@@ -851,13 +866,14 @@ void DoDriving_R()
 
 	InputLatch[1] = 0x80;
 
+#ifdef KEYTABLESIZE
 	if (KeyboardEnabled)
 	{
 		if (KeyTable[P2Right]) count++;
 		if (KeyTable[P2Left]) count--;
 		if (KeyTable[P2Fire]) InputLatch[1] = 0x00;
 	}
-
+#endif
 	if (MouseEnabled)
 	{
 		if (MPdirection & 1)
@@ -1046,6 +1062,7 @@ void DoKidVid_L()
 
 void DoKidVid_R()
 {
+#ifdef KEYTABLESIZE
 	if (KeyTable[KeyF1])
 	{
 		KeyTable[KeyF1] = 0;
@@ -1089,7 +1106,7 @@ void DoKidVid_R()
 		KidVidBlock = 0;
 		kv_OpenSampleFile();
 	}
-
+#endif
 /* the "tape" is running */
 	if ((KidVidTape != 0) && ((IOPortA & 0x01) == 0x01) && (kv_TapeBusy == 0))
 	{
@@ -1392,6 +1409,7 @@ void DoCompuMate_LR()
 	ChargeTrigger0[3] = CHARGEMAX;
 	IOPortA = IOPortA | (0x0c & 0x7f);
 
+#ifdef KEYTABLESIZE
 	if (KeyTable[KeyLShift]) ChargeTrigger0[3] = 0;
 	if (KeyTable[KeyCtrl]) ChargeTrigger0[0] = 0;
 
@@ -1460,6 +1478,7 @@ void DoCompuMate_LR()
 		default:
 		break;
 	}
+#endif
 }
 
 void DoNoController_L()
@@ -1529,6 +1548,7 @@ void Controls(void)
 	srv_Events();			/* process SDL controller events */
 	srv_get_mouse_movement();	/* poll mouse */
 
+#ifdef KEYTABLESIZE
 	KeyTable[KeyAlt] = KeyTable[KeyLAlt] | KeyTable[KeyRAlt] | KeyTable[KeyLMeta] | KeyTable[KeyRMeta];
 	KeyTable[KeyCtrl] = KeyTable[KeyLCtrl] | KeyTable[KeyRCtrl];
 
@@ -1657,16 +1677,17 @@ void Controls(void)
 		IOPortB = IOPortB & 0xfd;	/* bit 1 = SELECT */
 		set_status("SELECT");
 	}
+#endif
 	// gamepad1: start = Reset, select = Select
     if (gamepad1_bits.start || keyboard.bits.start)  {
         IOPortB = IOPortB & 0xfe;
-        set_status("RESET");
+        set_status("RESET ");
     }
     if (gamepad1_bits.select || keyboard.bits.select) {
         IOPortB = IOPortB & 0xfd;
         set_status("SELECT");
     }
-
+#ifdef KEYTABLESIZE
 	if (KeyTable[P0Easy]) 
 	{
 		IOPortB = IOPortB & 0xbf;	/* bit 6 = P0 difficulty */
@@ -1697,7 +1718,7 @@ void Controls(void)
 		IOPortB = IOPortB | 0x08;
 		set_status("Color");
 	}
-
+#endif
 	switch (LeftController)
 	{
 		case JS:

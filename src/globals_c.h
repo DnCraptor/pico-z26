@@ -56,9 +56,10 @@ db SC_ControlByte;		/* supercharger control byte */
 
 dd crc;					/* holds accumulated CRC */
 
-#define KEYTABLESIZE 512
-
+//#define KEYTABLESIZE 512
+#ifdef KEYTABLESIZE
 db KeyTable[KEYTABLESIZE];	/* event handler should tell z26 about keystrokes here */
+#endif
 
 /* SDL event handler should tell z26 about joystick states here */
 int JoystickAxis[16][6];
@@ -340,7 +341,9 @@ void InitCVars(void)
 	VBlankOff=0;
 	VBlankOn=0;
 	LinesInFrame=262;
+#ifdef KEYTABLESIZE
 	for (i=0; i<KEYTABLESIZE; i++) KeyTable[i] = 0;
+#endif
 
 	memset(RiotRam, 0, sizeof(RiotRam));
 	memset(TIA, 0, sizeof(TIA));
