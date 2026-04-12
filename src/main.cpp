@@ -82,7 +82,7 @@ static uint32_t __uninitialized_ram(rom_size) = 0;
 
 static FATFS fs;
 bool reboot = false;
-bool limit_fps = true;
+bool limit_fps = false;
 semaphore vga_start_semaphore;
 
 uint32_t rgb0;
@@ -105,28 +105,12 @@ SETTINGS settings = {
     .instant_ignition = false
 };
 
-typedef struct input_bits_s {
-    bool a: true;
-    bool b: true;
-    bool select: true;
-    bool start: true;
-    bool right: true;
-    bool left: true;
-    bool up: true;
-    bool down: true;
-} input_bits_t;
-
-typedef struct kbd_s {
-    input_bits_t bits;
-    int8_t h_code;
-} kbd_t;
-
-static kbd_t keyboard = {
+kbd_t keyboard = {
     .bits = { false, false, false, false, false, false, false, false },
     .h_code = -1
 };
 input_bits_t gamepad1_bits = { false, false, false, false, false, false, false, false };
-static input_bits_t gamepad2_bits = { false, false, false, false, false, false, false, false };
+input_bits_t gamepad2_bits = { false, false, false, false, false, false, false, false };
 
 bool swap_ab = false;
 
@@ -137,8 +121,6 @@ void nespad_tick() {
     ) {
         nespad_state = 0;
     }
-
-    uint8_t controls_state = 0;
 
     if (settings.swap_ab) {
         gamepad1_bits.b = keyboard.bits.a || (nespad_state & DPAD_A) != 0;
@@ -155,18 +137,6 @@ void nespad_tick() {
     gamepad1_bits.down = keyboard.bits.down || (nespad_state & DPAD_DOWN) != 0;
     gamepad1_bits.left = keyboard.bits.left || (nespad_state & DPAD_LEFT) != 0;
     gamepad1_bits.right = keyboard.bits.right || (nespad_state & DPAD_RIGHT) != 0;
-
-
-    if (gamepad1_bits.up) controls_state|=0x08;
-    if (gamepad1_bits.down) controls_state|=0x04;
-    if (gamepad1_bits.left) controls_state|=0x02;
-    if (gamepad1_bits.right) controls_state|=0x01;
-    if (gamepad1_bits.a) controls_state|=0x20;
-    if (gamepad1_bits.b) controls_state|=0x10;
-    if (gamepad1_bits.start) controls_state|=0x80;
-    if (gamepad1_bits.select) controls_state|=0x40;
-    // if (gamepad1_bits.down) smsSystem|=INPUT_SOFT_RESET;
-    // if (gamepad1_bits.down) smsSystem|=INPUT_HARD_RESET;
 }
 
 static bool isInReport(hid_keyboard_report_t const* report, const unsigned char keycode) {
@@ -392,9 +362,9 @@ void filebrowser(const char pathname[256], const char executables[11]) {
         off += 6;
         draw_text(" Navigation    ", off, 29, 0, 3);
         off += 16;
-        draw_text("A/F10", off, 29, 7, 0);
+        draw_text("     ", off, 29, 7, 0); // A/F10
         off += 5;
-        draw_text(" USB DRV ", off, 29, 0, 3);
+        draw_text("         ", off, 29, 0, 3); // USB DRV
 #endif
 
         if (FR_OK != f_opendir(&dir, basepath)) {
@@ -480,7 +450,7 @@ void filebrowser(const char pathname[256], const char executables[11]) {
                 }
             }
 
-            if (debounce && gamepad1_bits.start) {
+            if (debounce && (gamepad1_bits.start || gamepad1_bits.a || gamepad1_bits.b)) {
                 auto file_at_cursor = fileItems[offset + current_item];
 
                 if (file_at_cursor.is_directory) {

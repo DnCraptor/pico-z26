@@ -283,6 +283,13 @@ void DoJoystick_L()
 
 	}
 
+	// gamepad1 -> левый порт (P0)
+    if (gamepad1_bits.right || keyboard.bits.right)  IOPortA = IOPortA & 0x7f;
+    if (gamepad1_bits.left  || keyboard.bits.left)   IOPortA = IOPortA & 0xbf;
+    if (gamepad1_bits.down  || keyboard.bits.down)   IOPortA = IOPortA & 0xdf;
+    if (gamepad1_bits.up    || keyboard.bits.up)     IOPortA = IOPortA & 0xef;
+    if (gamepad1_bits.a || gamepad1_bits.b || keyboard.bits.a || keyboard.bits.b) InputLatch[0] = 0x00;
+
 	if (JoystickEnabled)
 	{
 		if (JoystickAxis[0][0] > 16384-4096)
@@ -317,6 +324,13 @@ void DoJoystick_R()
 		if (KeyTable[P2Up]) IOPortA = IOPortA & 0xfe;
 		if (KeyTable[P2Fire]) InputLatch[1] = 0x00;
 	}
+
+	// gamepad2 -> правый порт (P1)
+    if (gamepad2_bits.right)  IOPortA = IOPortA & 0xf7;
+    if (gamepad2_bits.left)   IOPortA = IOPortA & 0xfb;
+    if (gamepad2_bits.down)   IOPortA = IOPortA & 0xfd;
+    if (gamepad2_bits.up)     IOPortA = IOPortA & 0xfe;
+    if (gamepad2_bits.a || gamepad2_bits.b) InputLatch[1] = 0x00;
 
 	if (JoystickEnabled)
 	{
@@ -1643,6 +1657,15 @@ void Controls(void)
 		IOPortB = IOPortB & 0xfd;	/* bit 1 = SELECT */
 		set_status("SELECT");
 	}
+	// gamepad1: start = Reset, select = Select
+    if (gamepad1_bits.start || keyboard.bits.start)  {
+        IOPortB = IOPortB & 0xfe;
+        set_status("RESET");
+    }
+    if (gamepad1_bits.select || keyboard.bits.select) {
+        IOPortB = IOPortB & 0xfd;
+        set_status("SELECT");
+    }
 
 	if (KeyTable[P0Easy]) 
 	{
