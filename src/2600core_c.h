@@ -5,6 +5,11 @@
 void SetStarpath(void);
 void SetPitfallII(void);
 
+static inline void TIARIOTReadA(dw a);
+static inline void TIARIOTWriteA(dw a);
+static void TIARIOTRead(void);
+static void TIARIOTWrite(void);
+
 #include "z_tiatab_c.h"
 #include "z_tiavars_c.h"
 #include "c_trace_c.h"

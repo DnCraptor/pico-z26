@@ -6,34 +6,47 @@
  GNU General Public License Version 2 (GPL).  z26 comes with no warranty.
  Please see COPYING.TXT for details.
 */
+static inline void TIARIOTReadA(dw a) {
+    if (a & 0x200) {
+        if (a & 0x80) ReadRIOTTab[a & 0x7]();
+        else          TIAReadHandler[a & 0xF]();
+    } else {
+        if (a & 0x80) ReadRIOTRAM();
+        else          TIAReadHandler[a & 0xF]();
+    }
+}
+
+static void __not_in_flash_func(TIARIOTRead)(void) {
+	TIARIOTReadA(AddressBus);
+}
+
+static inline void TIARIOTWriteA(dw a) {
+    if (a & 0x200) {
+        if (a & 0x80) WriteRIOTHandler[a & 0x1F]();
+        else          TIAWriteHandler[a & 0x3F]();
+    } else {
+        if (a & 0x80) WriteRIOTRAM();
+        else          TIAWriteHandler[a & 0x3F]();
+    }
+}
+
+static void __not_in_flash_func(TIARIOTWrite)(void) {
+	TIARIOTWriteA(AddressBus);
+}
+
+static void __not_in_flash_func(BaseWrite)(void) {
+	if(AddressBus & 0x1000) WriteROM4K();
+	else TIARIOTWrite();
+}
 
 void InitData() {
 	int i;
 
 	for(i = 0; i < 0x1000; i++){
-		if(i & 0x200){
-			if(i & 0x80){
-				TIARIOTReadAccess[i] = ReadRIOTTab[i & 0x7];
-				TIARIOTWriteAccess[i] = WriteRIOTHandler[i & 0x1f];
-			}else{
-				TIARIOTReadAccess[i] = TIAReadHandler[i & 0x0f];
-				TIARIOTWriteAccess[i] = TIAWriteHandler[i & 0x3f];
-			}
-		}else{
-			if(i & 0x80){
-				TIARIOTReadAccess[i] = &ReadRIOTRAM;
-				TIARIOTWriteAccess[i] = &WriteRIOTRAM;
-			}else{
-				TIARIOTReadAccess[i] = TIAReadHandler[i & 0x0f];
-				TIARIOTWriteAccess[i] = TIAWriteHandler[i & 0x3f];
-			}
-		}
-	}
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = BaseWrite;
 		ReadAccess[0x1000 + i] = &ReadROM4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
+		WriteAccess[0x1000 + i] = BaseWrite;
 	}
 	
 	InitCVars();

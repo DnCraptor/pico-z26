@@ -42,7 +42,6 @@ int CartSize=0;			/* gets cart size */
 db PCXPalette[384];		/* palette information goes here */
 
 db *ScreenBuffer;			/* pointer to screen buffer (set to RealScreenBuffer 1-4) */
-db *ScreenBufferPrev;		/* pointer to screen buffer for previous frame (RSB 1-4)*/
 
 dd LinesInFrame;		/* # of lines in last frame */
 dd PrevLinesInFrame;	/* # of lines in frame before that */
@@ -281,12 +280,10 @@ void def_LoadDefaults(void)
 // 6507 имеет 13 адресных линий — весь 64 KB адресного пространства является 8-кратным зеркалом блока 0x0000..0x1FFF. 
 void (* ReadAccess[0x2000])(void);
 void (* WriteAccess[0x2000])(void);
-void (* TIARIOTReadAccess[0x1000])(void);
-void (* TIARIOTWriteAccess[0x1000])(void);
 
-db RiotRam[128];	/* RIOT RAM (must be zero initially) */
-db TIA[64];			/* TIA registers (also zeroed) */
-db Ram[32768];		/* Extra RAM (used or not depends on bankswitch scheme) */
+db RiotRam[128] = {0};	/* RIOT RAM (must be zero initially) */
+db TIA[64] = {0};		/* TIA registers (also zeroed) */
+db Ram[32768] = {0};	/* Extra RAM (used or not depends on bankswitch scheme) */
 
 int Frame = 0;		/* Frame counter */
 int PrevFrame = 0;	/* Previous value of frame counter */

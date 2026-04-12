@@ -87,13 +87,13 @@ void WriteHotspotBS4K(void){
 void ReadHotspotUA(void){
 
 	RomBank = (AddressBus & 0x40) << 6;
-	(* TIARIOTReadAccess[AddressBus & 0xfff])();
+	TIARIOTReadA(AddressBus & 0xfff);
 }
 
 void WriteHotspotUA(void){
 
 	RomBank = (AddressBus & 0x40) << 6;
-	(* TIARIOTWriteAccess[AddressBus & 0xfff])();
+	TIARIOTWriteA(AddressBus & 0xfff);
 }
 
 void ReadHotspotMB(void){
@@ -148,7 +148,7 @@ void WriteHotspotCM(void){
 	RomBank = (CMRamState & 0x3) << 12;
 	if(DataBus & 0x20) CM_Collumn = 0;
 	if(DataBus & 0x40) CM_Collumn = (CM_Collumn + 1) % 10;
-	(* TIARIOTWriteAccess[0x280])();
+	TIARIOTWriteA(0x280);
 }
 
 void WriteCMhigh(void){
@@ -167,8 +167,8 @@ void Init4K(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadROM4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -188,8 +188,8 @@ void InitCV(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 	}
 	for(i = 0; i < 0x800; i++){
 		ReadAccess[0x1800 + i] = &ReadROM2K;
@@ -219,8 +219,8 @@ void InitF8SC(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -311,8 +311,8 @@ void InitE0(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
 	for(i = 0; i < 0x400; i++){
@@ -350,14 +350,14 @@ void ReadBS3Fhigh(void){
 }
 void WriteHotspot3F(void){
 	TVSlice0 = DataBus << 11;
-	(* TIARIOTWriteAccess[AddressBus & 0x3f])();
+	TIARIOTWriteA(AddressBus & 0x3f);
 }
 void Init3F(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
 	for(i = 0; i < 0x800; i++){
@@ -391,19 +391,19 @@ void WriteBS3E(void){
 void WriteHotspot3E_E(void){
 	TVSlice0 = DataBus << 10;
 	ROMorRAM3E = 1;
-	(* TIARIOTWriteAccess[0x3e])();
+	TIARIOTWriteA(0x3e);
 }
 void WriteHotspot3E_F(void){
 	TVSlice0 = DataBus << 11;
 	ROMorRAM3E = 0;
-	(* TIARIOTWriteAccess[0x3f])();
+	TIARIOTWriteA(0x3f);
 }
 void Init3E(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
 	for(i = 0; i < 0x800; i++){
@@ -443,8 +443,8 @@ void InitFE(void){
 
     // $0000–$0FFF (TIA + RIOT)
     for (i = 0; i < 0x1000; i++) {
-        ReadAccess[i]  = TIARIOTReadAccess[i];
-        WriteAccess[i] = TIARIOTWriteAccess[i];
+        ReadAccess[i]  = TIARIOTRead;
+        WriteAccess[i] = TIARIOTWrite;
     }
 
     // $1000–$1FFF (ROM)
@@ -471,8 +471,8 @@ void InitF6SC(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -569,8 +569,8 @@ void InitE7(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 	}
 	for(i = 0; i < 0x800; i++){
 		ReadAccess[0x1000 + i] = &ReadBSE7;
@@ -617,8 +617,8 @@ void InitF4SC(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -649,8 +649,8 @@ void InitF8(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -700,8 +700,8 @@ void InitCM(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		if(i & 0x800){
 			ReadAccess[0x1000 + i] = &ReadCMhigh;
 			WriteAccess[0x1000 + i] = &WriteCMhigh;
@@ -726,8 +726,8 @@ void InitUA(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -764,8 +764,8 @@ void InitEF(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -820,8 +820,8 @@ void InitF6(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -851,8 +851,8 @@ void InitF4(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -876,8 +876,8 @@ void InitMB(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -904,8 +904,8 @@ void InitFA(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
@@ -1106,8 +1106,8 @@ void Init0840(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}

@@ -961,7 +961,7 @@ opcode(_ff,adr_absolute_index_write(reg_x),rmw_ram(ISB))			/* ff - ISB absolute,
         (since it is typically environment dependent)
 */
 
-void (* vectors[256])(void) = {
+void (* const vectors[256])(void) = {
 	_00,_01,jam,_03,_04,_05,_06,_07,_08,_09,_0a,_0b,_0c,_0d,_0e,_0f,
 	_10,_11,jam,_13,_14,_15,_16,_17,_18,_19,_1a,_1b,_1c,_1d,_1e,_1f,
 	_20,_21,jam,_23,_24,_25,_26,_27,_28,_29,_2a,_0b,_2c,_2d,_2e,_2f,	/* _2b=_0b */

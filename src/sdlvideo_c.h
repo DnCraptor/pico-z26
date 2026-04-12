@@ -163,7 +163,6 @@ void srv_CopyScreen()
 ///	srv_pitch = srv_screen->pitch;
 
 	emu_pixels = ScreenBuffer;
-	emu_pixels_prev = ScreenBufferPrev;
 	screen_pixels = srv_buffer;
 	
 	if (status_timer > 0) 
@@ -188,7 +187,6 @@ void srv_CopyScreen()
 ///		(*copy)();
 		screen_pixels += scanlinespread * srv_pitch;
 		emu_pixels += tiawidth;
-		emu_pixels_prev += tiawidth;
 	}
 
 ///	gl_DrawScreen();

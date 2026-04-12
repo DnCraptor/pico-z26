@@ -174,12 +174,12 @@ void SP_Q_Adr(void){
 
 void ReadSPlow(void){
 	if(!debugflag) SP_Q_Adr();
-	(* TIARIOTReadAccess[AddressBus & 0xfff])();
+	TIARIOTReadA(AddressBus & 0xfff);
 }
 
 void WriteSPlow(void){
 	SP_Q_Adr();
-	(* TIARIOTWriteAccess[AddressBus & 0xfff])();
+	TIARIOTWriteA(AddressBus & 0xfff);
 }
 
 void ReadSPhigh(void){

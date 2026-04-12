@@ -16,7 +16,6 @@ dd tex_width, tex_height;	/* dimensions of current window or video display in pi
 
 db *screen_pixels;      /* pointer to display screen */
 db *emu_pixels;         /* pointer to current emulator buffer */
-db *emu_pixels_prev;    /* pointer to previous emulator buffer */
 
 db screen_buffer_count = 0;
 db srv_done = 0;

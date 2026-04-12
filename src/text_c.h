@@ -275,10 +275,6 @@ void clrscr() {
 	sp = ScreenBuffer;
 	for(i=0; i<MaxLines*tiawidth; i++)
 		*sp++ = theme;	// *theme*
-		
-	sp = ScreenBufferPrev;	// force screen to update
-	for(i=0; i<MaxLines*tiawidth; i++)
-		*sp++ = 0x80;
 }
 
 /*

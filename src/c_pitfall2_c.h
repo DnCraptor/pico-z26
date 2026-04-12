@@ -448,8 +448,8 @@ void InitP2(void){
 	int i;
 	
 	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTReadAccess[i];
-		WriteAccess[i] = TIARIOTWriteAccess[i];
+		ReadAccess[i] = TIARIOTRead;
+		WriteAccess[i] = TIARIOTWrite;
 		ReadAccess[0x1000 + i] = &ReadBS4K;
 		WriteAccess[0x1000 + i] = &WriteROM4K;
 	}
