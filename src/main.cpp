@@ -717,8 +717,8 @@ bool toggle_color() {
 #endif
 const MenuItem menu_items[] = {
         {"Swap AB <> BA: %s",     ARRAY, &settings.swap_ab,  nullptr, 1, {"NO ",       "YES"}},
-        {},
-        { "Ghosting pix: %i ", INT, &settings.ghosting, nullptr, 5 },
+        //{},
+        //{ "Ghosting pix: %i ", INT, &settings.ghosting, nullptr, 5 },
         /*
         { "Palette: %s ", ARRAY, &settings.palette, nullptr, count_of(palettes), {
                   "DEFAULT          "
@@ -763,9 +763,9 @@ const MenuItem menu_items[] = {
         { "RGB3: %06Xh ", HEX, &rgb3, nullptr, 0xFFFFFF },
          */
 #if VGA
-        { "Keep aspect ratio: %s",     ARRAY, &settings.aspect_ratio,  nullptr, 1, {"NO ",       "YES"}},
+        //{ "Keep aspect ratio: %s",     ARRAY, &settings.aspect_ratio,  nullptr, 1, {"NO ",       "YES"}},
 #endif
-        { "Instant ignition simulation: %s",     ARRAY, &settings.instant_ignition,  nullptr, 1, {"NO ",       "YES"}},
+        //{ "Instant ignition simulation: %s",     ARRAY, &settings.instant_ignition,  nullptr, 1, {"NO ",       "YES"}},
 #if SOFTTV
         { "" },
         { "TV system %s", ARRAY, &tv_out_mode.tv_system, nullptr, 1, { "PAL ", "NTSC" } },
@@ -777,9 +777,9 @@ const MenuItem menu_items[] = {
 #endif
     //{ "Player 1: %s",        ARRAY, &player_1_input, 2, { "Keyboard ", "Gamepad 1", "Gamepad 2" }},
     //{ "Player 2: %s",        ARRAY, &player_2_input, 2, { "Keyboard ", "Gamepad 1", "Gamepad 2" }},
-    {},
-    { "Save state: %i", INT, &settings.save_slot, &save, 5 },
-    { "Load state: %i", INT, &settings.save_slot, &load, 5 },
+    //{},
+    //{ "Save state: %i", INT, &settings.save_slot, &save, 5 },
+    //{ "Load state: %i", INT, &settings.save_slot, &load, 5 },
 {},
 {
     "Overclocking: %s MHz", ARRAY, &frequency_index, &overclock, count_of(frequencies) - 1,
@@ -1002,13 +1002,7 @@ void menu() {
     }
 
 #if VGA
-    if (settings.aspect_ratio) {
-        graphics_set_offset(80, 40);
-        graphics_set_mode(GRAPHICSMODE_ASPECT);
-    } else {
-        graphics_set_offset(0, 4);
-        graphics_set_mode(GRAPHICSMODE_DEFAULT);
-    }
+    graphics_set_mode(GRAPHICSMODE_ASPECT);
 #else
     graphics_set_mode(GRAPHICSMODE_DEFAULT);
 #endif
@@ -1048,7 +1042,7 @@ void __time_critical_func(render_core)() {
 #endif
 
     const auto buffer = (uint8_t*)RealScreenBuffer1;
-    graphics_set_buffer(buffer, 160, 150);
+    graphics_set_buffer(buffer, 320, 256);
     graphics_set_textbuffer(buffer);
     graphics_set_bgcolor(0x000000);
 #if VGA
@@ -1128,16 +1122,9 @@ int __time_critical_func(main)() {
     while (true) {
         graphics_set_mode(TEXTMODE_DEFAULT);
         filebrowser(HOME_DIR, "bin,a26,rom");
-        graphics_set_buffer((uint8_t*)RealScreenBuffer1, 160, 150);
 
 #if VGA
-        if (settings.aspect_ratio) {
-            graphics_set_offset(80, 40);
-            graphics_set_mode(GRAPHICSMODE_ASPECT);
-        } else {
-            graphics_set_offset(0, 4);
-            graphics_set_mode(GRAPHICSMODE_DEFAULT);
-        }
+        graphics_set_mode(GRAPHICSMODE_ASPECT);
 #else
         settings.aspect_ratio = false;
         graphics_set_mode(GRAPHICSMODE_DEFAULT);

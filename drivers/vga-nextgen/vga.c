@@ -85,7 +85,7 @@ void __time_critical_func() dma_handler_VGA() {
 
     if (screen_line >= N_lines_visible) {
         //заполнение цветом фона
-        if (screen_line == N_lines_visible | screen_line == N_lines_visible + 3) {
+        if (screen_line == N_lines_visible || screen_line == N_lines_visible + 3) {
             uint32_t* output_buffer_32bit = lines_pattern[2 + (screen_line & 1)];
             output_buffer_32bit += shift_picture / 4;
             uint32_t p_i = (screen_line & is_flash_line) + (frame_number & is_flash_frame) & 1;
@@ -346,7 +346,8 @@ void graphics_set_mode(enum graphics_mode_t mode) {
             text_buffer_width = 80;
             text_buffer_height = 30;
     }
-    memset(graphics_buffer, 0, graphics_buffer_height * graphics_buffer_width);
+    if (graphics_buffer)
+        memset(graphics_buffer, 0, graphics_buffer_height * graphics_buffer_width);
     if (_SM_VGA < 0) return; // если  VGA не инициализирована -
 
     graphics_mode = mode;
