@@ -527,7 +527,11 @@ typedef struct __attribute__((__packed__)) {
     char value_list[45][20];
 } MenuItem;
 
+#if HDMI
+uint16_t frequencies[] = { 378, 396, 404, 408, 412, 416, 420, 424, 432, 504, 516, 524 };
+#else
 uint16_t frequencies[] = { 252, 362, 366, 378, 396, 404, 408, 412, 416, 420, 424, 432 };
+#endif
 #ifdef PICO_RP2040
     #ifdef CPU_FREQ
     uint8_t frequency_index = 0;
@@ -540,7 +544,7 @@ uint8_t frequency_index = 0;
 
 #ifndef PICO_RP2040
 static void __not_in_flash_func(flash_timings)() {
-        const int max_flash_freq = 88 * MHZ;
+        const int max_flash_freq = 66 * MHZ;
         const int clock_hz = frequencies[frequency_index] * MHZ;
         int divisor = (clock_hz + max_flash_freq - 1) / max_flash_freq;
         if (divisor == 1 && clock_hz > 100000000) {
@@ -738,7 +742,11 @@ const MenuItem menu_items[] = {
 {},
 {
     "Overclocking: %s MHz", ARRAY, &frequency_index, &overclock, count_of(frequencies) - 1,
+#if HDMI
+    { "378", "396", "404", "408", "412", "416", "420", "424", "432", "504", "516", "524" }
+#else
     { "252", "362", "366", "378", "396", "404", "408", "412", "416", "420", "424", "432" }
+#endif
 },
 { "Press START / Enter to apply", NONE },
     { "Reset to ROM select", ROM_SELECT },

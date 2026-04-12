@@ -167,8 +167,43 @@ static void pio_set_x(PIO pio, const int sm, uint32_t v) {
     pio_sm_exec(pio, sm, instr_mov);
 }
 
+static inline void* __not_in_flash_func(nf_memset)(void* ptr, int value, size_t len)
+{
+    uint8_t* p = (uint8_t*)ptr;
+    uint8_t v8 = (uint8_t)value;
 
-static void __scratch_y("hdmi_driver") dma_handler_HDMI() {
+    // --- выравниваем до 4 байт ---
+    while (len && ((uintptr_t)p & 3)) {
+        *p++ = v8;
+        len--;
+    }
+
+    // --- основной 32-битный цикл ---
+    if (len >= 4) {
+        uint32_t v32 = v8;
+        v32 |= v32 << 8;
+        v32 |= v32 << 16;
+
+        uint32_t* p32 = (uint32_t*)p;
+        size_t n32 = len >> 2;
+
+        while (n32--) {
+            *p32++ = v32;
+        }
+
+        p = (uint8_t*)p32;
+        len &= 3;
+    }
+
+    // --- хвост ---
+    while (len--) {
+        *p++ = v8;
+    }
+
+    return ptr;
+}
+
+static void __not_in_flash_func(dma_handler_HDMI)() {
     static uint32_t inx_buf_dma;
     static uint line = 0;
     irq_inx++;
@@ -195,13 +230,13 @@ static void __scratch_y("hdmi_driver") dma_handler_HDMI() {
             case VGA_320x240x256: {
                 //заполняем пространство сверху и снизу графического буфера
                 if (y <= graphics_buffer_shift_y || y >= (graphics_buffer_shift_y + graphics_buffer_height)) {
-                    memset(output_buffer, 255,SCREEN_WIDTH);
+                    nf_memset(output_buffer, 255,SCREEN_WIDTH);
                     break;
                 }
 
                 uint8_t* activ_buf_end = output_buffer + SCREEN_WIDTH;
                 //рисуем пространство слева от буфера
-                memset(output_buffer, 255, graphics_buffer_shift_x);
+                nf_memset(output_buffer, 255, graphics_buffer_shift_x);
                 output_buffer += graphics_buffer_shift_x;
 
                 //рисуем сам видеобуфер+пространство справа
@@ -246,48 +281,48 @@ static void __scratch_y("hdmi_driver") dma_handler_HDMI() {
         }
 
 
-        // memset(activ_buf,2,320);//test
+        // nf_memset(activ_buf,2,320);//test
 
         //ССИ
         //для выравнивания синхры
 
         // --|_|---|_|---|_|----
         //---|___________|-----
-        memset(activ_buf + 48,BASE_HDMI_CTRL_INX, 24);
-        memset(activ_buf,BASE_HDMI_CTRL_INX + 1, 48);
-        memset(activ_buf + 392,BASE_HDMI_CTRL_INX, 8);
+        nf_memset(activ_buf + 48,BASE_HDMI_CTRL_INX, 24);
+        nf_memset(activ_buf,BASE_HDMI_CTRL_INX + 1, 48);
+        nf_memset(activ_buf + 392,BASE_HDMI_CTRL_INX, 8);
 
         //без выравнивания
         // --|_|---|_|---|_|----
         //------|___________|----
-        //   memset(activ_buf+320,BASE_HDMI_CTRL_INX,8);
-        //   memset(activ_buf+328,BASE_HDMI_CTRL_INX+1,48);
-        //   memset(activ_buf+376,BASE_HDMI_CTRL_INX,24);
+        //   nf_memset(activ_buf+320,BASE_HDMI_CTRL_INX,8);
+        //   nf_memset(activ_buf+328,BASE_HDMI_CTRL_INX+1,48);
+        //   nf_memset(activ_buf+376,BASE_HDMI_CTRL_INX,24);
     } else {
         if ((line >= 490) && (line < 492)) {
             //кадровый синхроимпульс
             //для выравнивания синхры
             // --|_|---|_|---|_|----
             //---|___________|-----
-            memset(activ_buf + 48,BASE_HDMI_CTRL_INX + 2, 352);
-            memset(activ_buf,BASE_HDMI_CTRL_INX + 3, 48);
+            nf_memset(activ_buf + 48,BASE_HDMI_CTRL_INX + 2, 352);
+            nf_memset(activ_buf,BASE_HDMI_CTRL_INX + 3, 48);
             //без выравнивания
             // --|_|---|_|---|_|----
             //-------|___________|----
 
-            // memset(activ_buf,BASE_HDMI_CTRL_INX+2,328);
-            // memset(activ_buf+328,BASE_HDMI_CTRL_INX+3,48);
-            // memset(activ_buf+376,BASE_HDMI_CTRL_INX+2,24);
+            // nf_memset(activ_buf,BASE_HDMI_CTRL_INX+2,328);
+            // nf_memset(activ_buf+328,BASE_HDMI_CTRL_INX+3,48);
+            // nf_memset(activ_buf+376,BASE_HDMI_CTRL_INX+2,24);
         } else {
             //ССИ без изображения
             //для выравнивания синхры
 
-            memset(activ_buf + 48,BASE_HDMI_CTRL_INX, 352);
-            memset(activ_buf,BASE_HDMI_CTRL_INX + 1, 48);
+            nf_memset(activ_buf + 48,BASE_HDMI_CTRL_INX, 352);
+            nf_memset(activ_buf,BASE_HDMI_CTRL_INX + 1, 48);
 
-            // memset(activ_buf,BASE_HDMI_CTRL_INX,328);
-            // memset(activ_buf+328,BASE_HDMI_CTRL_INX+1,48);
-            // memset(activ_buf+376,BASE_HDMI_CTRL_INX,24);
+            // nf_memset(activ_buf,BASE_HDMI_CTRL_INX,328);
+            // nf_memset(activ_buf+328,BASE_HDMI_CTRL_INX+1,48);
+            // nf_memset(activ_buf+376,BASE_HDMI_CTRL_INX,24);
         };
     }
 
@@ -621,5 +656,5 @@ void graphics_set_textbuffer(uint8_t* buffer) {
 
 void clrScr(const uint8_t color) {
     if (text_buffer)
-        memset(text_buffer, color, TEXTMODE_COLS * TEXTMODE_ROWS * 2);
+        nf_memset(text_buffer, color, TEXTMODE_COLS * TEXTMODE_ROWS * 2);
 }
