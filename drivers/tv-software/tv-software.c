@@ -76,6 +76,7 @@ typedef struct TV_MODE {
 typedef struct G_BUFFER {
     uint width;
     uint height;
+    uint stride;
     int shift_x;
     int shift_y;
     uint8_t* data;
@@ -99,7 +100,9 @@ static G_BUFFER graphics_buffer = {
     .shift_x = 0,
     .shift_y = 0,
     .height = 240,
-    .width = 320
+    .width = 320,
+    .stride = 320,
+    .shift_x = 16
 };
 
 
@@ -1027,7 +1030,7 @@ static bool __time_critical_func(video_timer_callbackTV)(repeating_timer_t* rt) 
                                 }
                             } else {
                                 //для 8-битного буфера
-                                uint8_t* input_buffer8 = input_buffer + (y-graphics_buffer.shift_y) * graphics_buffer.width;
+                                uint8_t* input_buffer8 = input_buffer + (y-graphics_buffer.shift_y) * graphics_buffer.stride;
 
                                 // todo bgcolor
                                 uint8_t color = graphics_buffer.shift_x ? 200 : (*input_buffer8++);
@@ -1044,8 +1047,7 @@ static bool __time_critical_func(video_timer_callbackTV)(repeating_timer_t* rt) 
                                     next_ibuf -= di;
                                     if (next_ibuf <= 0) {
                                         x++;
-                                        if (x > graphics_buffer.shift_x && x < graphics_buffer.shift_x + graphics_buffer.
-                                                width) {
+                                        if (x > graphics_buffer.shift_x && x < graphics_buffer.shift_x + graphics_buffer.stride) {
                                             color = *input_buffer8++;
                                         }
                                         else {
@@ -1074,10 +1076,11 @@ static bool __time_critical_func(video_timer_callbackTV)(repeating_timer_t* rt) 
     return true;
 }
 
-void graphics_set_buffer(uint8_t* buffer, const uint16_t width, const uint16_t height) {
+void graphics_set_buffer(uint8_t* buffer, const uint16_t width, const uint16_t height, const uint16_t stride) {
     graphics_buffer.data = buffer;
     graphics_buffer.width = width;
     graphics_buffer.height = height;
+    graphics_buffer.stride = stride;
 }
 
 //выделение и настройка общих ресурсов - 4 DMA канала, PIO программ и 2 SM
