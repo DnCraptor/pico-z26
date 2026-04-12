@@ -1123,7 +1123,7 @@ int __time_critical_func(main)() {
     LaunchedFromCommandline = 1;
 
 	Init_SDL();
-	c_emulator();
+	// c_emulator();
 
     while (true) {
         graphics_set_mode(TEXTMODE_DEFAULT);
@@ -1142,10 +1142,26 @@ int __time_critical_func(main)() {
         settings.aspect_ratio = false;
         graphics_set_mode(GRAPHICSMODE_DEFAULT);
 #endif
+        reboot = false;
 
+        InitData();          // таблицы диспетчера, CPU, TIA, RIOT
+        Init_Service();      // буферы экрана
+        Controls();          // начальное состояние контроллеров
+        
         start_time = time_us_64();
 
-        while (!reboot) {
+        while (!ExitEmulator && !reboot) {
+            if (ResetEmulator) Reset_emulator();
+
+            srv_Events();
+            if (srv_done) break;
+
+            ScanFrame();
+            Controls();
+            srv_CopyScreen();
+
+            while (GamePaused) Controls();
+
             if (fxPressedV) {
                 if (altPressed) {
                     settings.save_slot = fxPressedV;
@@ -1171,6 +1187,9 @@ int __time_critical_func(main)() {
             tight_loop_contents();
         }
 
+        srv_Cleanup();
+        ExitEmulator = 0;
+        srv_done = 0;
         reboot = false;
     }
     __unreachable();
