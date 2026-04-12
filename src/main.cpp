@@ -927,13 +927,6 @@ void menu() {
 #else
     graphics_set_mode(GRAPHICSMODE_DEFAULT);
 #endif
-/*
-    if (count_of(palettes) <= settings.palette) {
-        settings.rgb0 = rgb0;
-        settings.rgb1 = rgb1;
-        settings.rgb2 = rgb2;
-        settings.rgb3 = rgb3;
-    }*/
     save_config();
 }
 
@@ -1046,7 +1039,11 @@ int __time_critical_func(main)() {
         graphics_set_mode(TEXTMODE_DEFAULT);
         filebrowser(HOME_DIR, "bin,a26,rom");
 
-        graphics_set_mode(GRAPHICSMODE_ASPECT);
+        #if VGA
+            graphics_set_mode(GRAPHICSMODE_ASPECT);
+        #else
+            graphics_set_mode(GRAPHICSMODE_DEFAULT);
+        #endif
         reboot = false;
 
         InitData();          // таблицы диспетчера, CPU, TIA, RIOT

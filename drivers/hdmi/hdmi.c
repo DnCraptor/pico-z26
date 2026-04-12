@@ -30,6 +30,7 @@ static uint32_t palette[256];
 static uint8_t* __scratch_y("hdmi_ptr_1") graphics_buffer = NULL;
 static int graphics_buffer_width = 0;
 static int graphics_buffer_height = 0;
+static int graphics_buffer_stride = 240;
 static int graphics_buffer_shift_x = 0;
 static int graphics_buffer_shift_y = 0;
 
@@ -186,7 +187,7 @@ static void __scratch_y("hdmi_driver") dma_handler_HDMI() {
 
     if (graphics_buffer && line < 480) {
         //область изображения
-        uint8_t* input_buffer = &graphics_buffer[(line / 2) * graphics_buffer_width];
+        uint8_t* input_buffer = &graphics_buffer[(line / 2) * graphics_buffer_stride];
         uint8_t* output_buffer = activ_buf + 72; //для выравнивания синхры;
         int y = line / 2;
         switch (graphics_mode) {
@@ -204,7 +205,7 @@ static void __scratch_y("hdmi_driver") dma_handler_HDMI() {
                 output_buffer += graphics_buffer_shift_x;
 
                 //рисуем сам видеобуфер+пространство справа
-                input_buffer = &graphics_buffer[(y - graphics_buffer_shift_y) * graphics_buffer_width];
+                input_buffer = &graphics_buffer[(y - graphics_buffer_shift_y) * graphics_buffer_stride];
 
                 const uint8_t* input_buffer_end = input_buffer + graphics_buffer_width;
 
@@ -562,10 +563,11 @@ void graphics_set_palette(uint8_t i, uint32_t color888) {
     conv_color64[i * 2 + 1] = conv_color64[i * 2] ^ 0x0003ffffffffffffl;
 };
 
-void graphics_set_buffer(uint8_t* buffer, uint16_t width, uint16_t height) {
+void graphics_set_buffer(uint8_t* buffer, uint16_t width, uint16_t height, uint16_t stride) {
     graphics_buffer = buffer;
     graphics_buffer_width = width;
     graphics_buffer_height = height;
+    graphics_buffer_stride = stride;
 };
 
 
