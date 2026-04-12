@@ -427,30 +427,31 @@ void Init3E(void){
 	2 8K banks at $1000 - $1FFF
 	banks are switched by JSR/RTS jumps to an address in the other bank.
 	the real hardware waits for two consecutive accesses to the stack to do so.
-	we cheat and just select the bank depending on the accessed address in ROM.
-	the $F000 - $FFFF bank is in the ROM image first, the $D000 - $DFFF bank is last.
+	the $F000 - $FFFF bank is in the ROM image first
+    the $D000 - $DFFF bank is last
 */
+void ReadFE(void) {
+    uint16_t addr = AddressBus;
+    uint16_t offset = addr & 0x0FFF;
+    // выбор банка по старшим битам адреса (как в оригинале)
+    uint8_t bank = (addr & 0x2000) ? 0 : 1;
+    DataBus = CartRom[(bank << 12) | offset];
+}
+
 void InitFE(void){
-	int i, j = 0;
-	
-///	for(j = 0; j < 2; j++){
-		for(i = 0; i < 0x1000; i++){
-			ReadAccess[j * 0x2000 + i] = TIARIOTReadAccess[i];
-			WriteAccess[j * 0x2000 + i] = TIARIOTWriteAccess[i];
-		///	ReadAccess[0x3000 + i] = &ReadROM4K; /// TODO: special W/A for FE-mapper
-			ReadAccess[0x1000 + i] = &ReadBSFE;
-			WriteAccess[j * 0x2000 + 0x1000 + i] = &WriteROM4K;
-		}
-///	}
-/**
-	for(i = 0; i < 0x4000; i++){
-		ReadAccess[i + 0x4000] = ReadAccess[i];
-		WriteAccess[i + 0x4000] = WriteAccess[i];
-		ReadAccess[i + 0x8000] = ReadAccess[i];
-		WriteAccess[i + 0x8000] = WriteAccess[i];
-		ReadAccess[i + 0xc000] = ReadAccess[i];
-		WriteAccess[i + 0xc000] = WriteAccess[i];
-	}*/
+    int i;
+
+    // $0000–$0FFF (TIA + RIOT)
+    for (i = 0; i < 0x1000; i++) {
+        ReadAccess[i]  = TIARIOTReadAccess[i];
+        WriteAccess[i] = TIARIOTWriteAccess[i];
+    }
+
+    // $1000–$1FFF (ROM)
+    for (i = 0; i < 0x1000; i++) {
+        ReadAccess[0x1000 + i]  = &ReadFE;
+        WriteAccess[0x1000 + i] = &WriteROM4K;
+    }
 }
 
 
@@ -1297,7 +1298,7 @@ void SetupBanks() {
 	/* make last 2k bank fixed for 3E and 3F+ games: */
 	if ((BSType == 11) || (BSType == 14))
 		TVSlice1 = CartSize - 2048;
-	
+
 	/* fill memory map with pointers to proper handler functions */
 	(* InitMemoryMap[BSType])();
 }
