@@ -48,6 +48,7 @@ static uint graphics_buffer_width = 0;
 static uint graphics_buffer_height = 0;
 static int graphics_buffer_shift_x = 0;
 static int graphics_buffer_shift_y = 0;
+static uint graphics_buffer_stride = 0;
 
 static bool is_flash_line = false;
 static bool is_flash_frame = false;
@@ -309,7 +310,7 @@ void __time_critical_func() dma_handler_VGA() {
             break;
         }
         case GRAPHICSMODE_DEFAULT:
-            input_buffer_8bit = input_buffer + y * width;
+            input_buffer_8bit = input_buffer + y * graphics_buffer_stride;
             for (int i = width; i--;) {
                 uint8_t t = *input_buffer_8bit++;
                 *output_buffer_16bit++ = current_palette[t];
@@ -317,7 +318,7 @@ void __time_critical_func() dma_handler_VGA() {
             }
             break;
         case GRAPHICSMODE_ASPECT:
-            input_buffer_8bit = input_buffer + y * width;
+            input_buffer_8bit = input_buffer + y * graphics_buffer_stride;
             for (int x = 0; x< width; x++) {
                 *output_buffer_16bit++ = current_palette[*input_buffer_8bit++];
             }
@@ -348,6 +349,7 @@ void graphics_set_mode(enum graphics_mode_t mode) {
     }
     if (graphics_buffer && graphics_mode != mode)
         memset(graphics_buffer, 0, graphics_buffer_height * graphics_buffer_width);
+    clrScr(0);
     if (_SM_VGA < 0) return; // если  VGA не инициализирована -
 
     graphics_mode = mode;
@@ -465,12 +467,16 @@ void graphics_set_mode(enum graphics_mode_t mode) {
     }
 }
 
-void graphics_set_buffer(uint8_t* buffer, const uint16_t width, const uint16_t height) {
+void graphics_set_buffer(uint8_t* buffer, const uint16_t width, const uint16_t height, const uint16_t stride) {
     graphics_buffer = buffer;
     graphics_buffer_width = width;
     graphics_buffer_height = height;
+    graphics_buffer_stride = stride;
 }
 
+void graphics_set_stride(const uint16_t stride) {
+    graphics_buffer_stride = stride;
+}
 
 void graphics_set_offset(const int x, const int y) {
     graphics_buffer_shift_x = x;
@@ -628,7 +634,7 @@ void graphics_init() {
 
 void clrScr(const uint8_t color) {
     uint16_t* t_buf = (uint16_t *)text_buffer;
+    if(!t_buf) return;
     int size = TEXTMODE_COLS * TEXTMODE_ROWS;
-
     while (size--) *t_buf++ = color << 4 | ' ';
 }

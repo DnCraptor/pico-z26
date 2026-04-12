@@ -45,11 +45,13 @@ void AdjustPalette() {
 	{	// NTSC
 		if (PaletteNumber == 0) return;
 		PaletteNumber = 0;
+        graphics_set_offset(16, 240 - 256);
 	}
 	else
 	{	// PAL
 		if (PaletteNumber == 1) return;
 		PaletteNumber = 1;
+        graphics_set_offset(16, 0);
 	}
 	srv_SetPalette();
 	ClearScreenBuffers();

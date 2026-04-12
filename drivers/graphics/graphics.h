@@ -51,7 +51,9 @@ void graphics_init();
 
 void graphics_set_mode(enum graphics_mode_t mode);
 
-void graphics_set_buffer(uint8_t* buffer, uint16_t width, uint16_t height);
+void graphics_set_buffer(uint8_t* buffer, uint16_t width, uint16_t height, const uint16_t stride);
+
+void graphics_set_stride(const uint16_t stride);
 
 void graphics_set_offset(int x, int y);
 

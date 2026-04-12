@@ -963,14 +963,10 @@ void __time_critical_func(render_core)() {
 #endif
 
     const auto buffer = (uint8_t*)RealScreenBuffer1;
-    graphics_set_buffer(buffer, 320, 256);
+    graphics_set_buffer(buffer + 16, 304, 256, 320);
     graphics_set_textbuffer(buffer);
     graphics_set_bgcolor(0x000000);
-#if VGA
-    graphics_set_offset(0, 0);
-#else
-    graphics_set_offset(80, 40);
-#endif
+    graphics_set_offset(16, 0);
     graphics_set_flashmode(false, false);
     sem_acquire_blocking(&vga_start_semaphore);
 
@@ -1040,12 +1036,7 @@ int __time_critical_func(main)() {
         graphics_set_mode(TEXTMODE_DEFAULT);
         filebrowser(HOME_DIR, "bin,a26,rom");
 
-#if VGA
         graphics_set_mode(GRAPHICSMODE_ASPECT);
-#else
-        settings.aspect_ratio = false;
-        graphics_set_mode(GRAPHICSMODE_DEFAULT);
-#endif
         reboot = false;
 
         InitData();          // таблицы диспетчера, CPU, TIA, RIOT
