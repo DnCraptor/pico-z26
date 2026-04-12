@@ -85,13 +85,9 @@ bool reboot = false;
 semaphore vga_start_semaphore;
 
 SETTINGS settings = {
-    .version = 1,
+    .version = 2,
     .swap_ab = false,
-    .aspect_ratio = false,
-    .ghosting = 4,
-    .palette = 0,
     .save_slot = 0,
-    .tba = 0,
 };
 
 kbd_t keyboard = {
@@ -633,7 +629,13 @@ void load_config() {
 
     if (FR_OK == f_mount(&fs, "", 1) && FR_OK == f_open(&file, pathname, FA_READ)) {
         UINT bytes_read;
-        f_read(&file, &settings, sizeof(settings), &bytes_read);
+        if (f_size(&file) == sizeof(settings)) {
+            SETTINGS s;
+            f_read(&file, &s, sizeof(s), &bytes_read);
+            if (s.version == settings.version) {
+                settings = s;
+            }
+        }
         f_close(&file);
     }
 }
@@ -676,55 +678,9 @@ bool toggle_color() {
 #endif
 const MenuItem menu_items[] = {
         {"Swap AB <> BA: %s",     ARRAY, &settings.swap_ab,  nullptr, 1, {"NO ",       "YES"}},
-        //{},
-        //{ "Ghosting pix: %i ", INT, &settings.ghosting, nullptr, 5 },
-        /*
-        { "Palette: %s ", ARRAY, &settings.palette, nullptr, count_of(palettes), {
-                  "DEFAULT          "
-                , "BLACK & WHITE    "
-                , "BGB              "
-                , "AUTUMN FOREST    "
-                , "OCEAN SAND       "
-                , "MINT SAND        "
-                , "AMBER            "
-                , "GREEN            "
-                , "BLUE             "
-                , "WATAROO          "
-                , "GB_DMG           "
-                , "GB_POCKET        "
-                , "GB_LIGHT         "
-                , "BLOSSOM_PINK     "
-                , "BUBBLES_BLUE     "
-                , "BUTTERCUP_GREEN  "
-                , "DIGIVICE         "
-                , "GAME_COM         "
-                , "GAMEKING         "
-                , "GAME_MASTER      "
-                , "GOLDEN_WILD      "
-                , "GREENSCALE       "
-                , "HOKAGE_ORANGE    "
-                , "LABO_FAWN        "
-                , "SUPER_SAIYAN     "
-                , "MICROVISION      "
-                , "MILLION_LIVE_GOLD"
-                , "ODYSSEY_GOLD     "
-                , "SHINY_SKY_BLUE   "
-                , "SLIME_BLUE       "
-                , "TI_83            "
-                , "TRAVEL_WOOD      "
-                , "VIRTUAL_BOY      "
-                , "TV-LINK          "
-                , "CUSTOM           "
-         }},
-        { "RGB0: %06Xh ", HEX, &rgb0, nullptr, 0xFFFFFF },
-        { "RGB1: %06Xh ", HEX, &rgb1, nullptr, 0xFFFFFF },
-        { "RGB2: %06Xh ", HEX, &rgb2, nullptr, 0xFFFFFF },
-        { "RGB3: %06Xh ", HEX, &rgb3, nullptr, 0xFFFFFF },
-         */
-#if VGA
-        //{ "Keep aspect ratio: %s",     ARRAY, &settings.aspect_ratio,  nullptr, 1, {"NO ",       "YES"}},
-#endif
-        //{ "Instant ignition simulation: %s",     ARRAY, &settings.instant_ignition,  nullptr, 1, {"NO ",       "YES"}},
+        {},
+        {"Player 1 Hard: %s",     ARRAY, &settings.player1_hard,  nullptr, 1, {"NO ",       "YES"}},
+        {"Player 2 Hard: %s",     ARRAY, &settings.player2_hard,  nullptr, 1, {"NO ",       "YES"}},
 #if SOFTTV
         { "" },
         { "TV system %s", ARRAY, &tv_out_mode.tv_system, nullptr, 1, { "PAL ", "NTSC" } },
@@ -797,7 +753,6 @@ void menu() {
                 color = 0x01;
                 bg_color = 0xFF;
             }
-            int pal = settings.palette;
             const MenuItem* item = &menu_items[i];
             if (i == current_item) {
                 switch (item->type) {
@@ -879,9 +834,6 @@ void menu() {
                 if (nullptr != item->callback && gamepad1_bits.start) {
                     exit = item->callback();
                 }
-            }
-            if (pal != settings.palette) {
-                update_palette();
             }
             static char result[TEXTMODE_COLS];
             switch (item->type) {
@@ -1058,6 +1010,8 @@ int __time_critical_func(main)() {
         Init_Service();      // буферы экрана
         Controls();          // начальное состояние контроллеров
         update_palette();
+        if (settings.player1_hard) IOPortB |= 0x40; else IOPortB &= 0xbf;
+        if (settings.player2_hard) IOPortB |= 0x80; else IOPortB &= 0x7f;
         
         while (!ExitEmulator && !reboot) {
             if (ResetEmulator) Reset_emulator();
@@ -1084,6 +1038,8 @@ int __time_critical_func(main)() {
 
             if (gamepad1_bits.start && gamepad1_bits.select) {
                 menu();
+                if (settings.player1_hard) IOPortB |= 0x40; else IOPortB &= 0xbf;
+                if (settings.player2_hard) IOPortB |= 0x80; else IOPortB &= 0x7f;
             }
 
             // синхронизация: NTSC = 16666 мкс/кадр, PAL = 20000 мкс/кадр

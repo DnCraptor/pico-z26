@@ -56,7 +56,7 @@ db SC_ControlByte;		/* supercharger control byte */
 
 dd crc;					/* holds accumulated CRC */
 
-//#define KEYTABLESIZE 512
+#define KEYTABLESIZE 512
 #ifdef KEYTABLESIZE
 db KeyTable[KEYTABLESIZE];	/* event handler should tell z26 about keystrokes here */
 #endif
