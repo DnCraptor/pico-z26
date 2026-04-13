@@ -172,7 +172,7 @@ unsigned char ReadROM(unsigned int adr)
 		AddressBus = (adr & 0xffff);
 		debugflag = 1;
 		AddressBus = adr;
-		ReadAccess[AddressBus & 0x1FFF]();
+		ReadAccess();
 		debugflag = 0;
 		cpu_Rbyte = DataBus;
 

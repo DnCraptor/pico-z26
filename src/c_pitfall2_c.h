@@ -444,26 +444,33 @@ void SetPitfallII(void){				 //  <-- from banks.asm
 	bankswitch entry points
 */
 
-void InitP2(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 2; i++){
-		ReadAccess[0x1ff8 + i] = &ReadHotspotBS4K;
-		WriteAccess[0x1ff8 + i] = &WriteHotspotBS4K;
-	}
-	HotspotAdjust = 8;
+static void __not_in_flash_func(P2Read)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF8)       ReadHotspotBS4K();
+        else if (a >= 0x1080)  ReadBS4K();
+        else if (a >= 0x1040)  P2_WriteFunctions[a & 0x3F]();  // DPC write ports (read-trap)
+        else                   P2_ReadFunctions[a & 0x3F]();   // DPC read ports
+    } else {
+        TIARIOTRead();
+    }
+}
 
-	for(i = 0; i < 0x40; i++){
-		ReadAccess[0x1000 + i] = P2_ReadFunctions[i];
-		WriteAccess[0x1000 + i] = P2_ReadFunctions[i];
-		WriteAccess[0x1040 + i] = P2_WriteFunctions[i];
-		ReadAccess[0x1040 + i] = P2_WriteFunctions[i];
-	}
-	Copy64K();
+static void __not_in_flash_func(P2Write)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF8)       WriteHotspotBS4K();
+        else if (a >= 0x1080)  WriteROM4K();
+        else if (a >= 0x1040)  P2_WriteFunctions[a & 0x3F]();  // DPC write ports
+        else                   P2_ReadFunctions[a & 0x3F]();   // DPC read ports (write-trap)
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitP2(void) {
+    ReadAccess  = P2Read;
+    WriteAccess = P2Write;
+    HotspotAdjust = 8;
+    set_status("Mapper P2");
 }

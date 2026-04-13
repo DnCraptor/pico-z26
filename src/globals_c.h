@@ -85,7 +85,7 @@ db RealScreenBuffer1[320*501];
 
 dd ChargeTrigger0[4] = {TRIGMAX/2, TRIGMAX/2, TRIGMAX/2, TRIGMAX/2};
 
-#define CHARGEMAX 0x800000;	/* don't charge capacitors over this value (MAIN.ASM)*/
+#define CHARGEMAX (0x800000)/* don't charge capacitors over this value (MAIN.ASM)*/
 dd ChargeCounter = 0;		/* # of lines capacitors have been charging */
 
 db InputLatch[2] = {0, 0};	/* INPT4 + INPT5 */
@@ -278,8 +278,8 @@ void def_LoadDefaults(void)
 // C-engine specific
 
 // 6507 имеет 13 адресных линий — весь 64 KB адресного пространства является 8-кратным зеркалом блока 0x0000..0x1FFF. 
-void (* ReadAccess[0x2000])(void);
-void (* WriteAccess[0x2000])(void);
+void (* ReadAccess)(void);
+void (* WriteAccess)(void);
 
 db RiotRam[128] = {0};	/* RIOT RAM (must be zero initially) */
 db TIA[64] = {0};		/* TIA registers (also zeroed) */
@@ -302,8 +302,6 @@ db *DisplayPointer;	/* where to store the next TIA graphics output byte */
 
 db DataBus;			/* state of the data bus - used for  moving data to and from the CPU emu */
 dw AddressBus;		/* state of the address bus - used for read and write accesses */
-void (* ReadROMAccess)(void);	/* the bankswitching read handlers will be called though this */
-void (* WriteROMAccess)(void);	/* the bankswitching write handlers will be called through this */
 
 /* variables from CPU emulation - used in tracing too */
 

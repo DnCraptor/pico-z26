@@ -34,21 +34,21 @@ static void __not_in_flash_func(TIARIOTWrite)(void) {
 	TIARIOTWriteA(AddressBus);
 }
 
+static void __not_in_flash_func(BaseRead)(void) {
+	if(AddressBus & 0x1000) ReadROM4K();
+	else TIARIOTRead();
+}
+
 static void __not_in_flash_func(BaseWrite)(void) {
 	if(AddressBus & 0x1000) WriteROM4K();
 	else TIARIOTWrite();
 }
 
 void InitData() {
-	int i;
+	ReadAccess = BaseRead;
+	WriteAccess = BaseWrite;
+    HotspotAdjust = 0;
 
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = BaseWrite;
-		ReadAccess[0x1000 + i] = &ReadROM4K;
-		WriteAccess[0x1000 + i] = BaseWrite;
-	}
-	
 	InitCVars();
 	Init_CPU();
 //	Init_CPUhand();

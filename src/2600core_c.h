@@ -9,6 +9,8 @@ static inline void TIARIOTReadA(dw a);
 static inline void TIARIOTWriteA(dw a);
 static void TIARIOTRead(void);
 static void TIARIOTWrite(void);
+static void BaseRead(void);
+static void BaseWrite(void);
 
 #include "z_tiatab_c.h"
 #include "z_tiavars_c.h"

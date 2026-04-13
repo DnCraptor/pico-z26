@@ -19,11 +19,11 @@ dd Address;
 
 #define readbank \
 	bumpclock \
-	ReadAccess[AddressBus & 0x1FFF]();
+	ReadAccess();
 
 #define writebank \
 	bumpclock \
-	WriteAccess[AddressBus & 0x1FFF]();
+	WriteAccess();
 
 #define opcode($1, $2, $3) \
 	void $1(void){ \
@@ -997,7 +997,7 @@ void Init_CPU(void) {
 	flag_D = 0;		/*  decimal flag */
 	flag_V = 0;		/*  overflow flag */
 	flag_I = 0;		/*  interrupt disable flag */
-	flag_B = 0;		/*  break flag */
+	//flag_B = 0;		/*  break flag */
  	flag_B = 0x10;	/* B flag is always set exept when pushing the status byte after a hardware IRQ */
 	RCycles = 0;		/*  cycles per instruction */
 	RClock = 0;		/*  clock cycles */

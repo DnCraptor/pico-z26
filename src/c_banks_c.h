@@ -48,102 +48,87 @@ dd LastAddressBus4A50 = 0xffff;	/* state of AddressBus on last cycle */
 	
 */
 
-#define Copy64K(x)
+inline static void __not_in_flash_func(ReadROM2K)(void){
 
-void ReadROM2K(void){
-	
 	DataBus = CartRom[AddressBus & 0x7ff];
 }
 
-void ReadROM4K(void){
-	
+inline static void __not_in_flash_func(ReadROM4K)(void){
+
 	DataBus = CartRom[AddressBus & 0xfff];
 }
 
-void WriteROM4K(void){
+inline static void __not_in_flash_func(WriteROM4K)(void){
+	// DO NOTHING
 }
 
-void ReadBSFE(void){
-
+inline static void __not_in_flash_func(ReadBSFE)(void){
 	DataBus = CartRom[(AddressBus & 0xfff) + 0x1000];
 }
 
-void ReadBS4K(void){
-
+inline static void __not_in_flash_func(ReadBS4K)(void){
 	DataBus = CartRom[(AddressBus & 0xfff) + RomBank];
 }
 
-void ReadHotspotBS4K(void){
-
+inline static void __not_in_flash_func(ReadHotspotBS4K)(void){
 	DataBus = CartRom[(AddressBus & 0xfff) + RomBank];
 	RomBank = ((AddressBus & 0x0f) - HotspotAdjust) << 12;
 }
 
-void WriteHotspotBS4K(void){
-
+inline static void __not_in_flash_func(WriteHotspotBS4K)(void){
 	RomBank = ((AddressBus & 0x0f) - HotspotAdjust) << 12;
 }
 
-void ReadHotspotUA(void){
-
+inline static void __not_in_flash_func(ReadHotspotUA)(void){
 	RomBank = (AddressBus & 0x40) << 6;
 	TIARIOTReadA(AddressBus & 0xfff);
 }
 
-void WriteHotspotUA(void){
-
+inline static void __not_in_flash_func(WriteHotspotUA)(void){
 	RomBank = (AddressBus & 0x40) << 6;
 	TIARIOTWriteA(AddressBus & 0xfff);
 }
 
-void ReadHotspotMB(void){
-
+inline static void __not_in_flash_func(ReadHotspotMB)(void){
 	DataBus = CartRom[(AddressBus & 0xfff) + RomBank];
 	RomBank = (RomBank + 0x1000) & 0xf000;
 }
 
-void WriteHotspotMB(void){
-
+inline static void __not_in_flash_func(WriteHotspotMB)(void){
 	RomBank = (RomBank + 0x1000) & 0xf000;
 }
 
-void ReadRAM128(void){
-
+inline static void __not_in_flash_func(ReadRAM128)(void){
 	DataBus = Ram[AddressBus & 0x7f];
 }
 
-void WriteRAM128(void){
-
+inline static void __not_in_flash_func(WriteRAM128)(void){
 	Ram[AddressBus & 0x7f] = DataBus;
 }
 
-void ReadRAM256(void){
-
+inline static void __not_in_flash_func(ReadRAM256)(void){
 	DataBus = Ram[AddressBus & 0xff];
 }
 
-void WriteRAM256(void){
-
+inline static void __not_in_flash_func(WriteRAM256)(void){
 	Ram[AddressBus & 0xff] = DataBus;
 }
 
-void ReadRAM1K(void){
-
+inline static void __not_in_flash_func(ReadRAM1K)(void){
 	DataBus = Ram[AddressBus & 0x3ff];
 }
 
-void WriteRAM1K(void){
-
+inline static void __not_in_flash_func(WriteRAM1K)(void){
 	Ram[AddressBus & 0x3ff] = DataBus;
 }
 
-void ReadCMhigh(void){
+inline static void __not_in_flash_func(ReadCMhigh)(void){
 	if(CMRamState & 0x10)
 		DataBus = CartRom[(AddressBus & 0xfff) + RomBank];
 	else DataBus = Ram[AddressBus & 0x7ff];
 }
 
-void WriteHotspotCM(void){
+inline static void __not_in_flash_func(WriteHotspotCM)(void){
 	CMRamState = DataBus;
 	RomBank = (CMRamState & 0x3) << 12;
 	if(DataBus & 0x20) CM_Collumn = 0;
@@ -151,7 +136,7 @@ void WriteHotspotCM(void){
 	TIARIOTWriteA(0x280);
 }
 
-void WriteCMhigh(void){
+inline static void __not_in_flash_func(WriteCMhigh)(void){
 	if ((CMRamState & 0x30) == 0x20)
 		Ram[AddressBus & 0x7ff] = DataBus;
 }
@@ -163,16 +148,11 @@ void WriteCMhigh(void){
 	4K of ROM fixed at $1000 - $1FFF
 	2K ROMs are doubled to appear at $1000 - $17FF and at $1800 - $1FFF
 */
-void Init4K(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadROM4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	Copy64K();
+void Init4K(void) {
+	ReadAccess = BaseRead;
+	WriteAccess = BaseWrite;
+	HotspotAdjust = 0;
+    set_status("Mapper 4K");
 }
 
 
@@ -184,26 +164,29 @@ void Init4K(void){
 	read from RAM at $1000 - $13FF
 	write to  RAM at $1400 - $17FF
 */
-void InitCV(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-	}
-	for(i = 0; i < 0x800; i++){
-		ReadAccess[0x1800 + i] = &ReadROM2K;
-		WriteAccess[0x1800 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 0x400; i++){
-		ReadAccess[0x1000 + i] = &ReadRAM1K;
-		WriteAccess[0x1000 + i] = &ReadRAM1K;
-		WriteAccess[0x1400 + i] = &WriteRAM1K;
-		ReadAccess[0x1400 + i] = &WriteRAM1K;
-	}
-	Copy64K();
+static void __not_in_flash_func(CVRead)(void) {
+    if (AddressBus & 0x1000) {
+        if (AddressBus & 0x800) ReadROM2K();
+        else                    ReadRAM1K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(CVWrite)(void) {
+    if (AddressBus & 0x1000) {
+        if (AddressBus & 0x800) WriteROM4K();   // ignore
+        else                    WriteRAM1K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitCV(void) {
+    ReadAccess  = CVRead;
+    WriteAccess = CVWrite;
+    set_status("Mapper CV");
+}
 
 /*
 	2 -- 8K Superchip [F8SC]
@@ -215,30 +198,35 @@ void InitCV(void){
 	read from RAM at $1080 - $10FF
 	write to  RAM at $1000 - $107F
 */
-void InitF8SC(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 2; i++){
-		ReadAccess[0x1ff8 + i] = &ReadHotspotBS4K;
-		WriteAccess[0x1ff8 + i] = &WriteHotspotBS4K;
-	}
-	HotspotAdjust = 8;
-
-	for(i = 0; i < 0x80; i++){
-		ReadAccess[0x1080 + i] = &ReadRAM128;
-		WriteAccess[0x1080 + i] = &ReadRAM128;
-		WriteAccess[0x1000 + i] = &WriteRAM128;
-		ReadAccess[0x1000 + i] = &WriteRAM128;
-	}
-	Copy64K();
+static void __not_in_flash_func(F8SCRead)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF8)        ReadHotspotBS4K();
+        else if (a >= 0x1080)   ReadRAM128();
+		// По спеке read window RAM — $1080-$10FF, а $1000-$107F — write window (read-trap). Здесь read-trap просто отдаёт ReadBS4K() — это намеренно или нужен отдельный обработчик?
+        else                    ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(F8SCWrite)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF8)        WriteHotspotBS4K();
+        else if (a < 0x1080)    WriteRAM128();
+        else                    WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitF8SC(void) {
+    ReadAccess  = F8SCRead;
+    WriteAccess = F8SCWrite;
+    HotspotAdjust = 8;
+    set_status("Mapper F8SC");
+}
 
 /*
 	3 -- 8K Parker Bros. [E0]
@@ -274,64 +262,71 @@ void InitF8SC(void){
 	select bank 7 by accessing $1FF7
 	
 */
-void ReadHotspotE0_B0(void){
+inline static void ReadHotspotE0_B0(void){
 	DataBus = CartRom[(AddressBus & 0x3ff) + PBSlice0];
 	PBSlice0 = (AddressBus & 0x7) << 10;
 }
-void WriteHotspotE0_B0(void){
+inline static void WriteHotspotE0_B0(void){
 	PBSlice0 = (AddressBus & 0x7) << 10;
 }
-void ReadHotspotE0_B1(void){
+inline static void ReadHotspotE0_B1(void){
 	DataBus = CartRom[(AddressBus & 0x3ff) + PBSlice1];
 	PBSlice1 = (AddressBus & 0x7) << 10;
 }
-void WriteHotspotE0_B1(void){
+inline static void WriteHotspotE0_B1(void){
 	PBSlice1 = (AddressBus & 0x7) << 10;
 }
-void ReadHotspotE0_B2(void){
+inline static void ReadHotspotE0_B2(void){
 	DataBus = CartRom[(AddressBus & 0x3ff) + PBSlice2];
 	PBSlice2 = (AddressBus & 0x7) << 10;
 }
-void WriteHotspotE0_B2(void){
+inline static void WriteHotspotE0_B2(void){
 	PBSlice2 = (AddressBus & 0x7) << 10;
 }
-void ReadBSE0_B0(void){
-		DataBus = CartRom[(AddressBus & 0x3ff) + PBSlice0];
+inline static void ReadBSE0_B0(void){
+	DataBus = CartRom[(AddressBus & 0x3ff) + PBSlice0];
 }
-void ReadBSE0_B1(void){
-		DataBus = CartRom[(AddressBus & 0x3ff) + PBSlice1];
+inline static void ReadBSE0_B1(void){
+	DataBus = CartRom[(AddressBus & 0x3ff) + PBSlice1];
 }
-void ReadBSE0_B2(void){
-		DataBus = CartRom[(AddressBus & 0x3ff) + PBSlice2];
+inline static void ReadBSE0_B2(void){
+	DataBus = CartRom[(AddressBus & 0x3ff) + PBSlice2];
 }
-void ReadBSE0_B3(void){
-		DataBus = CartRom[(AddressBus & 0x3ff) + 0x1c00];
+inline static void ReadBSE0_B3(void){
+	DataBus = CartRom[(AddressBus & 0x3ff) + 0x1c00];
 }
-void InitE0(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 0x400; i++){
-		ReadAccess[0x1000 + i] = &ReadBSE0_B0;
-		ReadAccess[0x1400 + i] = &ReadBSE0_B1;
-		ReadAccess[0x1800 + i] = &ReadBSE0_B2;
-		ReadAccess[0x1c00 + i] = &ReadBSE0_B3;
-	}
-	for(i = 0; i < 8; i++){
-		ReadAccess[0x1fe0 + i] = &ReadHotspotE0_B0;
-		WriteAccess[0x1fe0 + i] = &WriteHotspotE0_B0;
-		ReadAccess[0x1fe8 + i] = &ReadHotspotE0_B1;
-		WriteAccess[0x1fe8 + i] = &WriteHotspotE0_B1;
-		ReadAccess[0x1ff0 + i] = &ReadHotspotE0_B2;
-		WriteAccess[0x1ff0 + i] = &WriteHotspotE0_B2;
-	}
-	Copy64K();
+static void __not_in_flash_func(E0Read)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF0)      ReadHotspotE0_B2();
+        else if (a >= 0x1FE8) ReadHotspotE0_B1();
+        else if (a >= 0x1FE0) ReadHotspotE0_B0();
+        else if (a >= 0x1C00) ReadBSE0_B3();
+        else if (a >= 0x1800) ReadBSE0_B2();
+        else if (a >= 0x1400) ReadBSE0_B1();
+        else                  ReadBSE0_B0();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(E0Write)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF0)      WriteHotspotE0_B2();
+        else if (a >= 0x1FE8) WriteHotspotE0_B1();
+        else if (a >= 0x1FE0) WriteHotspotE0_B0();
+        else                  WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitE0(void) {
+    ReadAccess  = E0Read;
+    WriteAccess = E0Write;
+    set_status("Mapper E0");
+}
 
 /*
 	 4 -- 8K Tigervision [3F] and
@@ -342,32 +337,38 @@ void InitE0(void){
 	[3F]  -> 2K of ROM fixed at $1800 - $ 1FFF (this is always the 4th 2K bank in the ROM)
 	[3F+] -> 2K of ROM fixed at $1800 - $ 1FFF (this is always the last 2K bank in the ROM)
 */
-void ReadBS3Flow(void){
+inline static void ReadBS3Flow(void){
 	DataBus = CartRom[(AddressBus & 0x7ff) + TVSlice0];
 }
-void ReadBS3Fhigh(void){
+inline static void ReadBS3Fhigh(void){
 	DataBus = CartRom[(AddressBus & 0x7ff) + TVSlice1];
 }
-void WriteHotspot3F(void){
+inline static void WriteHotspot3F(void){
 	TVSlice0 = DataBus << 11;
 	TIARIOTWriteA(AddressBus & 0x3f);
 }
-void Init3F(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 0x800; i++){
-		ReadAccess[0x1000 + i] = &ReadBS3Flow;
-		ReadAccess[0x1800 + i] = &ReadBS3Fhigh;
-	}
-	for(i = 0; i < 0x40; i++){
-		WriteAccess[i] = &WriteHotspot3F;
-	}
-	Copy64K();
+static void __not_in_flash_func(F3Read)(void) {
+    if (AddressBus & 0x1000) {
+        if (AddressBus & 0x800) ReadBS3Fhigh();
+        else                    ReadBS3Flow();
+    } else {
+        TIARIOTRead();
+    }
+}
+
+static void __not_in_flash_func(F3Write)(void) {
+    if (AddressBus & 0x1000) {
+        WriteROM4K();
+    } else {
+        if ((AddressBus & 0x1FFF) < 0x40) WriteHotspot3F();
+        else                              TIARIOTWrite();
+    }
+}
+
+void Init3F(void) {
+    ReadAccess  = F3Read;
+    WriteAccess = F3Write;
+    set_status("Mapper 3F");
 }
 
 /*
@@ -381,45 +382,49 @@ void Init3F(void){
 	read from RAM at $1000 - $13FF
 	write to  RAM at $1400 - $17FF
 */
-void ReadBS3Elow(void){
+static inline void ReadBS3Elow(void){
 	if(!ROMorRAM3E) DataBus = CartRom[(AddressBus & 0x7ff) + TVSlice0];
 	else DataBus = Ram[(AddressBus & 0x3ff)+ TVSlice0];
 }
-void WriteBS3E(void){
+static inline void WriteBS3E(void){
 	Ram[(AddressBus & 0x3ff) + TVSlice0] = DataBus;
 }
-void WriteHotspot3E_E(void){
+static inline void WriteHotspot3E_E(void){
 	TVSlice0 = DataBus << 10;
 	ROMorRAM3E = 1;
 	TIARIOTWriteA(0x3e);
 }
-void WriteHotspot3E_F(void){
+static inline void WriteHotspot3E_F(void){
 	TVSlice0 = DataBus << 11;
 	ROMorRAM3E = 0;
 	TIARIOTWriteA(0x3f);
 }
-void Init3E(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 0x800; i++){
-//		ReadAccess[0x1000 + i] = &ReadBS3Flow;
-		ReadAccess[0x1000 + i] = &ReadBS3Elow;
-		ReadAccess[0x1800 + i] = &ReadBS3Fhigh;
-	}
-	for(i = 0; i < 0x400; i++){
-//		ReadAccess[0x1400 + i] = &WriteBS3E;
-		WriteAccess[0x1400 + i] = &WriteBS3E;
-	}
-	WriteAccess[0x3e] = &WriteHotspot3E_E;
-	WriteAccess[0x3f] = &WriteHotspot3E_F;
-	Copy64K();
+static void __not_in_flash_func(E3Read)(void) {
+    if (AddressBus & 0x1000) {
+        if (AddressBus & 0x800) ReadBS3Fhigh();
+        else                    ReadBS3Elow();   // $1000-$17FF включая write window
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(E3Write)(void) {
+    if (AddressBus & 0x1000) {
+        if (AddressBus & 0x400) WriteBS3E();     // $1400-$17FF (и $1C00+ ignored)
+        else                    WriteROM4K();    // $1000-$13FF ignore
+    } else {
+        dw a = AddressBus & 0x1FFF;
+        if      (a == 0x3F) WriteHotspot3E_F();
+        else if (a == 0x3E) WriteHotspot3E_E();
+        else                TIARIOTWrite();
+    }
+}
+
+void Init3E(void) {
+    ReadAccess  = E3Read;
+    WriteAccess = E3Write;
+    set_status("Mapper 3E");
+}
 
 /*
 	5 -- 8K Activision [FE] (flat)
@@ -430,7 +435,7 @@ void Init3E(void){
 	the $F000 - $FFFF bank is in the ROM image first
     the $D000 - $DFFF bank is last
 */
-void ReadFE(void) {
+inline static void ReadFE(void) {
     uint16_t addr = AddressBus;
     uint16_t offset = addr & 0x0FFF;
     // выбор банка по старшим битам адреса (как в оригинале)
@@ -438,22 +443,21 @@ void ReadFE(void) {
     DataBus = CartRom[(bank << 12) | offset];
 }
 
-void InitFE(void){
-    int i;
-
-    // $0000–$0FFF (TIA + RIOT)
-    for (i = 0; i < 0x1000; i++) {
-        ReadAccess[i]  = TIARIOTRead;
-        WriteAccess[i] = TIARIOTWrite;
-    }
-
-    // $1000–$1FFF (ROM)
-    for (i = 0; i < 0x1000; i++) {
-        ReadAccess[0x1000 + i]  = &ReadFE;
-        WriteAccess[0x1000 + i] = &WriteROM4K;
-    }
+static void __not_in_flash_func(FERead)(void) {
+    if (AddressBus & 0x1000) ReadFE();
+    else                     TIARIOTRead();
 }
 
+static void __not_in_flash_func(FEWrite)(void) {
+    if (AddressBus & 0x1000) WriteROM4K();
+    else                     TIARIOTWrite();
+}
+
+void InitFE(void) {
+    ReadAccess  = FERead;
+    WriteAccess = FEWrite;
+    set_status("Mapper FE");
+}
 
 /*
 	6 -- 16K Superchip [F6SC]
@@ -467,30 +471,34 @@ void InitFE(void){
 	read from RAM at $1080 - $10FF
 	write to  RAM at $1000 - $107F
 */
-void InitF6SC(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 4; i++){
-		ReadAccess[0x1ff6 + i] = &ReadHotspotBS4K;
-		WriteAccess[0x1ff6 + i] = &WriteHotspotBS4K;
-	}
-	HotspotAdjust = 6;
-
-	for(i = 0; i < 0x80; i++){
-		ReadAccess[0x1080 + i] = &ReadRAM128;
-		WriteAccess[0x1080 + i] = &ReadRAM128;
-		WriteAccess[0x1000 + i] = &WriteRAM128;
-		ReadAccess[0x1000 + i] = &WriteRAM128;
-	}
-	Copy64K();
+static void __not_in_flash_func(F6SCRead)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF6)      ReadHotspotBS4K();
+        else if (a >= 0x1080) ReadRAM128();
+        else                  ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(F6SCWrite)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF6)   WriteHotspotBS4K();
+        else if (a < 0x1080) WriteRAM128();
+        else                 WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitF6SC(void) {
+    ReadAccess  = F6SCRead;
+    WriteAccess = F6SCWrite;
+    HotspotAdjust = 6;
+    set_status("Mapper F6SC");
+}
 
 /*
 	7 -- 16K M-Network [E7]
@@ -517,85 +525,87 @@ void InitF6SC(void){
 	write to  RAM at $1800 - $18FF
 	
 */
-void ReadBSE7(void){
+inline static void ReadBSE7(void){
 
 	if(RomBank == (0x7 * 0x800)) DataBus = Ram[(AddressBus & 0x3ff) + 0x400];
 	else DataBus = CartRom[(AddressBus & 0x7ff) + RomBank];
 }
 
-void WriteBSE7(void){
+inline static void WriteBSE7(void){
 
 	if(RomBank == (0x7 * 0x800)) Ram[(AddressBus & 0x3ff) + 0x400] = DataBus;
 }
 
-void ReadBSE7RAM(void){
+inline static void ReadBSE7RAM(void){
 
 	DataBus = Ram[(AddressBus & 0xff) + MNRamSlice];
 }
 
-void WriteBSE7RAM(void){
+inline static void WriteBSE7RAM(void){
 
 	Ram[(AddressBus & 0xff) + MNRamSlice] = DataBus;
 }
 
-void ReadBSE7last(void){
+inline static void ReadBSE7last(void){
 
 	DataBus = CartRom[(AddressBus & 0x7ff) + 0x3800];
 }
 
-void ReadHotspotBSE7ROM(void){
+inline static void ReadHotspotBSE7ROM(void){
 
 	DataBus = CartRom[(AddressBus & 0x7ff) + 0x3800];
 	RomBank = (AddressBus & 0x0f) << 11;
 }
 
-void WriteHotspotBSE7ROM(void){
+inline static void WriteHotspotBSE7ROM(void){
 
 	RomBank = (AddressBus & 0x0f) << 11;
 }
 
-void ReadHotspotBSE7RAM(void){
+inline static void ReadHotspotBSE7RAM(void){
 
 	DataBus = CartRom[(AddressBus & 0x7ff) + 0x3800];
 	MNRamSlice = (AddressBus & 0x03) << 8;
 }
 
-void WriteHotspotBSE7RAM(void){
+inline static void WriteHotspotBSE7RAM(void){
 
 	MNRamSlice = (AddressBus & 0x03) << 8;
 }
 
-void InitE7(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-	}
-	for(i = 0; i < 0x800; i++){
-		ReadAccess[0x1000 + i] = &ReadBSE7;
-		WriteAccess[0x1000 + i] = &WriteBSE7;
-		ReadAccess[0x1800 + i] = &ReadBSE7last;
-		WriteAccess[0x1800 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 0x100; i++){
-		ReadAccess[0x1800 + i] = &WriteBSE7RAM;
-		WriteAccess[0x1800 + i] = &WriteBSE7RAM;
-		ReadAccess[0x1900 + i] = &ReadBSE7RAM;
-		WriteAccess[0x1900 + i] = &ReadBSE7RAM;
-	}
-	for(i = 0; i < 8; i++){
-		ReadAccess[0x1fe0 + i] = &ReadHotspotBSE7ROM;
-		WriteAccess[0x1fe0 + i] = &WriteHotspotBSE7ROM;
-	}
-	for(i = 0; i < 4; i++){
-		ReadAccess[0x1fe8 + i] = &ReadHotspotBSE7RAM;
-		WriteAccess[0x1fe8 + i] = &WriteHotspotBSE7RAM;
-	}
-
-	Copy64K();
+static void __not_in_flash_func(E7Read)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if      (a >= 0x1FE8) ReadHotspotBSE7RAM();  // $1FE8-$1FEB
+        else if (a >= 0x1FE0) ReadHotspotBSE7ROM();  // $1FE0-$1FE7
+        /* $1FEC-$1FFF: не переопределялось в оригинале — под вопросом */
+        else if (a >= 0x1900) ReadBSE7RAM();          // $1900-$19FF read window
+        else if (a >= 0x1800) WriteBSE7RAM();         // $1800-$18FF write-trap
+        else                  ReadBSE7();             // $1000-$17FF switchable
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(E7Write)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if      (a >= 0x1FE8) WriteHotspotBSE7RAM(); // $1FE8-$1FEB
+        else if (a >= 0x1FE0) WriteHotspotBSE7ROM(); // $1FE0-$1FE7
+        /* $1FEC-$1FFF: не переопределялось в оригинале — под вопросом */
+        else if (a >= 0x1900) ReadBSE7RAM();          // $1900-$19FF read-trap
+        else if (a >= 0x1800) WriteBSE7RAM();         // $1800-$18FF write window
+        else                  WriteBSE7();            // $1000-$17FF switchable
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitE7(void) {
+    ReadAccess  = E7Read;
+    WriteAccess = E7Write;
+    set_status("Mapper E7");
+}
 
 /*
 	8 -- 32K Superchip [F4SC]
@@ -613,30 +623,34 @@ void InitE7(void){
 	read from RAM at $1080 - $10FF
 	write to  RAM at $1000 - $107F
 */
-void InitF4SC(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 8; i++){
-		ReadAccess[0x1ff4 + i] = &ReadHotspotBS4K;
-		WriteAccess[0x1ff4 + i] = &WriteHotspotBS4K;
-	}
-	HotspotAdjust = 4;
-
-	for(i = 0; i < 0x80; i++){
-		ReadAccess[0x1080 + i] = &ReadRAM128;
-		WriteAccess[0x1080 + i] = &ReadRAM128;
-		WriteAccess[0x1000 + i] = &WriteRAM128;
-		ReadAccess[0x1000 + i] = &WriteRAM128;
-	}
-	Copy64K();
+static void __not_in_flash_func(F4SCRead)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF4)       ReadHotspotBS4K();
+        else if (a >= 0x1080)  ReadRAM128();
+        else                   ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(F4SCWrite)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF4)      WriteHotspotBS4K();
+        else if (a < 0x1080)  WriteRAM128();
+        else                  WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitF4SC(void) {
+    ReadAccess  = F4SCRead;
+    WriteAccess = F4SCWrite;
+    HotspotAdjust = 4;
+    set_status("Mapper F4SC");
+}
 
 /*
 	9 & 20 -- 8K Atari [F8] (9 = banks swapped)
@@ -645,23 +659,30 @@ void InitF4SC(void){
 	select bank 0 by accessing $1FF8
 	select bank 1 by accessing $1FF9
 */
-void InitF8(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 2; i++){
-		ReadAccess[0x1ff8 + i] = &ReadHotspotBS4K;
-		WriteAccess[0x1ff8 + i] = &WriteHotspotBS4K;
-	}
-	HotspotAdjust = 8;
-	Copy64K();
+static void __not_in_flash_func(F8Read)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) >= 0x1FF8) ReadHotspotBS4K();
+        else                                  ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(F8Write)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) >= 0x1FF8) WriteHotspotBS4K();
+        else                                  WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitF8(void) {
+    ReadAccess  = F8Read;
+    WriteAccess = F8Write;
+    HotspotAdjust = 8;
+    set_status("Mapper F8");
+}
 
 /*
 	10 -- Compumate [CM]
@@ -696,24 +717,30 @@ void InitF8(void){
 	collumn 8 = 1 Q A Z
 	collumn 9 = 4 R F V
 */
-void InitCM(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		if(i & 0x800){
-			ReadAccess[0x1000 + i] = &ReadCMhigh;
-			WriteAccess[0x1000 + i] = &WriteCMhigh;
-		}else{
-			ReadAccess[0x1000 + i] = &ReadBS4K;
-			WriteAccess[0x1000 + i] = &WriteROM4K;
-		}
-	}
-	WriteAccess[0x280] = &WriteHotspotCM;
-	Copy64K();
+static void __not_in_flash_func(CMRead)(void) {
+    if (AddressBus & 0x1000) {
+        if (AddressBus & 0x800) ReadCMhigh();
+        else                    ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(CMWrite)(void) {
+    if (AddressBus & 0x1000) {
+        if (AddressBus & 0x800) WriteCMhigh();
+        else                    WriteROM4K();
+    } else {
+        if ((AddressBus & 0x1FFF) == 0x280) WriteHotspotCM();
+        else                                TIARIOTWrite();
+    }
+}
+
+void InitCM(void) {
+    ReadAccess  = CMRead;
+    WriteAccess = CMWrite;
+    set_status("Mapper CM");
+}
 
 /*
 	12 -- 8K United Appliance Ltd. [UA]
@@ -722,22 +749,31 @@ void InitCM(void){
 	select bank 0 by accessing $0220
 	select bank 1 by accessing $0240
 */
-void InitUA(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	ReadAccess[0x220] = &ReadHotspotUA;
-	WriteAccess[0x220] = &WriteHotspotUA;
-	ReadAccess[0x240] = &ReadHotspotUA;
-	WriteAccess[0x240] = &WriteHotspotUA;
-	Copy64K();
+static void __not_in_flash_func(UARead)(void) {
+    if (AddressBus & 0x1000) {
+        ReadBS4K();
+    } else {
+        dw a = AddressBus & 0x1FFF;
+        if (a == 0x220 || a == 0x240) ReadHotspotUA();
+        else                          TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(UAWrite)(void) {
+    if (AddressBus & 0x1000) {
+        WriteROM4K();
+    } else {
+        dw a = AddressBus & 0x1FFF;
+        if (a == 0x220 || a == 0x240) WriteHotspotUA();
+        else                          TIARIOTWrite();
+    }
+}
+
+void InitUA(void) {
+    ReadAccess  = UARead;
+    WriteAccess = UAWrite;
+    set_status("Mapper UA");
+}
 
 /*
 	13 -- 64K Homestar Runner / Paul Slocum [EF]
@@ -760,21 +796,29 @@ void InitUA(void){
 	select bank 14 by accessing $1FEE
 	select bank 15 by accessing $1FEF
 */
-void InitEF(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 16; i++){
-		ReadAccess[0x1fe0 + i] = &ReadHotspotBS4K;
-		WriteAccess[0x1fe0 + i] = &WriteHotspotBS4K;
-	}
-	HotspotAdjust = 0;
-	Copy64K();
+static void __not_in_flash_func(EFRead)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) >= 0x1FE0) ReadHotspotBS4K();
+        else                                  ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
+}
+
+static void __not_in_flash_func(EFWrite)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) >= 0x1FE0) WriteHotspotBS4K();
+        else                                  WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitEF(void) {
+    ReadAccess  = EFRead;
+    WriteAccess = EFWrite;
+    HotspotAdjust = 0;
+    set_status("Mapper EF");
 }
 
 /*
@@ -816,23 +860,30 @@ void InitSP(void);
 	select bank 2 by accessing $1FF8
 	select bank 3 by accessing $1FF9
 */
-void InitF6(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 4; i++){
-		ReadAccess[0x1ff6 + i] = &ReadHotspotBS4K;
-		WriteAccess[0x1ff6 + i] = &WriteHotspotBS4K;
-	}
-	HotspotAdjust = 6;
-	Copy64K();
+static void __not_in_flash_func(F6Read)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) >= 0x1FF6) ReadHotspotBS4K();
+        else                                 ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(F6Write)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) >= 0x1FF6) WriteHotspotBS4K();
+        else                                 WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitF6(void) {
+    ReadAccess  = F6Read;
+    WriteAccess = F6Write;
+    HotspotAdjust = 6;
+    set_status("Mapper F6");
+}
 
 /*
 	17 -- 32K Atari [F4]
@@ -847,24 +898,30 @@ void InitF6(void){
 	select bank 6 by accessing $1FFA
 	select bank 7 by accessing $1FFB
 */
-void InitF4(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 8; i++){
-		ReadAccess[0x1ff4 + i] = &ReadHotspotBS4K;
-		WriteAccess[0x1ff4 + i] = &WriteHotspotBS4K;
-	}
-	HotspotAdjust = 4;
-
-	Copy64K();
+static void __not_in_flash_func(F4Read)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) >= 0x1FF4) ReadHotspotBS4K();
+        else                                 ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(F4Write)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) >= 0x1FF4) WriteHotspotBS4K();
+        else                                 WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitF4(void) {
+    ReadAccess  = F4Read;
+    WriteAccess = F4Write;
+    HotspotAdjust = 4;
+    set_status("Mapper F4");
+}
 
 /*
 	18 -- 64K Megaboy [MB]
@@ -872,22 +929,30 @@ void InitF4(void){
 	16 4K ROM banks at $1000 - $1FFF
 	select banks by repeatedly accessing $1FF0
 */
-void InitMB(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	ReadAccess[0x1ff0] = &ReadHotspotMB;
-	WriteAccess[0x1ff0] = &WriteHotspotMB;
-	HotspotAdjust = 6;
-
-	Copy64K();
+static void __not_in_flash_func(MBRead)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) == 0x1FF0) ReadHotspotMB();
+        else                                  ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(MBWrite)(void) {
+    if (AddressBus & 0x1000) {
+        if ((AddressBus & 0x1FFF) == 0x1FF0) WriteHotspotMB();
+        else                                  WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitMB(void) {
+    ReadAccess  = MBRead;
+    WriteAccess = MBWrite;
+    HotspotAdjust = 6;
+    set_status("Mapper MB");
+}
 
 /*
 	19 -- 12K CBS [FA]
@@ -900,30 +965,34 @@ void InitMB(void){
 	read from RAM at $1100 - $11FF
 	write to  RAM at $1000 - $10FF
 */
-void InitFA(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 3; i++){
-		ReadAccess[0x1ff8 + i] = &ReadHotspotBS4K;
-		WriteAccess[0x1ff8 + i] = &WriteHotspotBS4K;
-	}
-	HotspotAdjust = 8;
-
-	for(i = 0; i < 0x100; i++){
-		ReadAccess[0x1100 + i] = &ReadRAM256;
-		WriteAccess[0x1100 + i] = &ReadRAM256;
-		WriteAccess[0x1000 + i] = &WriteRAM256;
-		ReadAccess[0x1000 + i] = &WriteRAM256;
-	}
-	Copy64K();
+static void __not_in_flash_func(FARead)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF8)       ReadHotspotBS4K();
+        else if (a >= 0x1100)  ReadRAM256();
+        else                   ReadBS4K();
+    } else {
+        TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(FAWrite)(void) {
+    if (AddressBus & 0x1000) {
+        dw a = AddressBus & 0x1FFF;
+        if (a >= 0x1FF8)      WriteHotspotBS4K();
+        else if (a < 0x1100)  WriteRAM256();
+        else                  WriteROM4K();
+    } else {
+        TIARIOTWrite();
+    }
+}
+
+void InitFA(void) {
+    ReadAccess  = FARead;
+    WriteAccess = FAWrite;
+    HotspotAdjust = 8;
+    set_status("Mapper FA");
+}
 
 /*
 	21 -- 8K+DPC Pitfall2 [P2]
@@ -1102,22 +1171,29 @@ void WBank4A50(void)
 	select bank 0 by accessing %xxx0 1xxx x0xx xxxx ($0800)
 	select bank 1 by accessing %xxx0 1xxx x1xx xxxx ($0840)
 */
-void Init0840(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = TIARIOTRead;
-		WriteAccess[i] = TIARIOTWrite;
-		ReadAccess[0x1000 + i] = &ReadBS4K;
-		WriteAccess[0x1000 + i] = &WriteROM4K;
-	}
-	for(i = 0; i < 0x800; i++){
-		ReadAccess[0x800 + i] = &ReadHotspotUA;
-		WriteAccess[0x800 + i] = &WriteHotspotUA;
-	}
-	Copy64K();
+static void __not_in_flash_func(C0840Read)(void) {
+    if (AddressBus & 0x1000) {
+        ReadBS4K();
+    } else {
+        if (AddressBus & 0x800) ReadHotspotUA();
+        else                    TIARIOTRead();
+    }
 }
 
+static void __not_in_flash_func(C0840Write)(void) {
+    if (AddressBus & 0x1000) {
+        WriteROM4K();
+    } else {
+        if (AddressBus & 0x800) WriteHotspotUA();
+        else                    TIARIOTWrite();
+    }
+}
+
+void Init0840(void) {
+    ReadAccess  = C0840Read;
+    WriteAccess = C0840Write;
+    set_status("Mapper 0840");
+}
 
 
 void (* InitMemoryMap[24])(void) = {

@@ -139,7 +139,7 @@ void StarpathJAM(void){
 	process current address
 */
 
-void SP_Q_Adr(void){
+inline static void SP_Q_Adr(void){
 	if(SP_AddressCount <= 5){
 		if((AddressBus & 0x1fff) != SP_PrevAdr){
 			SP_PrevAdr = AddressBus & 0x1fff;
@@ -171,53 +171,40 @@ void SP_Q_Adr(void){
 /*
 	actual bankswitch code
 */
-
-void ReadSPlow(void){
+inline static void ReadSPlow(void){
 	if(!debugflag) SP_Q_Adr();
 	TIARIOTReadA(AddressBus & 0xfff);
 }
-
-void WriteSPlow(void){
+inline static void WriteSPlow(void){
 	SP_Q_Adr();
 	TIARIOTWriteA(AddressBus & 0xfff);
 }
 
-void ReadSPhigh(void){
+inline static void ReadSPhigh(void){
 	if(!debugflag) SP_Q_Adr();
 	DataBus = 
 		CartRom[SPSlice[(AddressBus & 0x800) >> 11] + (AddressBus & 0x7ff)];
 }
 
-void WriteSPhigh(void){
+inline static void WriteSPhigh(void){
 	SP_Q_Adr();
 }
 
-void InitSP(void){
-	int i;
-	
-	for(i = 0; i < 0x1000; i++){
-		ReadAccess[i] = &ReadSPlow;
-		WriteAccess[i] = &WriteSPlow;
-		ReadAccess[0x1000 + i] = &ReadSPhigh;
-		WriteAccess[0x1000 + i] = &WriteSPhigh;
-	}
-	Copy64K();
+static void __not_in_flash_func(SPRead)(void) {
+    if (AddressBus & 0x1000) ReadSPhigh();
+    else                     ReadSPlow();
 }
 
-
-
-void RBank_SP(void){
-	if(!debugflag) SP_Q_Adr();
-	if(!(AddressBus & 0x1000)) ReadHardware();
-	else DataBus = 
-		CartRom[SPSlice[(AddressBus & 0x800) >> 11] + (AddressBus & 0x7ff)];
+static void __not_in_flash_func(SPWrite)(void) {
+    if (AddressBus & 0x1000) WriteSPhigh();
+    else                     WriteSPlow();
 }
 
-void WBank_SP(void){
-	SP_Q_Adr();
-	if(!(AddressBus & 0x1000)) WriteHardware();
+void InitSP(void) {
+    ReadAccess  = SPRead;
+    WriteAccess = SPWrite;
+    set_status("Mapper SP");
 }
-
 
 /**
  z26 is Copyright 1997-2019 by John Saeger and contributors.  
