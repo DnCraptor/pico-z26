@@ -1,7 +1,10 @@
 # pico-z26 (Atari 2600 Emulator for Raspberry Pi Pico / Pico 2)
 
 This project is a standalone **Atari 2600 emulator** running on
-Raspberry Pi Pico 2 and other RP2350-based boards.
+Raspberry Pi Pico, Pi Pico 2 and other RP2040/RP2350-based boards.
+<br/>
+[Original repo](https://www.whimsey.com/z26/)<br/>
+[Best Hardware](https://murmulator.tilda.ws/)<br/>
 
 It allows you to play classic Atari 2600 games directly on real
 hardware, using SD card storage and external controllers.
@@ -16,9 +19,10 @@ hardware, using SD card storage and external controllers.
 -   On-device menu for settings and control
 -   Support for standard Atari joystick controls
 -   Support for USB gamepads
--   Support for PS/2 keyboard
+-   Support for USB and PS/2 keyboard
 -   Basic audio output
--   Video output compatible with common displays
+-   Video output for HDMI and VGA displays; TV composite NTSC/PAL
+-   Audio as PWM or i2s output
 
 ------------------------------------------------------------------------
 
@@ -43,9 +47,11 @@ You can load games in two ways:
 
 The emulator includes a built-in menu system.
 
-From the menu you can: - Select and load games - Reset the game - Change
-difficulty switches (A/B) - Toggle game options (e.g. variations
-depending on the game) - Return to gameplay
+From the menu you can:
+ - Select and load games
+ - Reset the game
+ - Change difficulty switches
+ - Return to gameplay
 
 ------------------------------------------------------------------------
 

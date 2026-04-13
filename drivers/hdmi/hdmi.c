@@ -1,7 +1,6 @@
 #include "graphics.h"
 #include <stdio.h>
 #include <string.h>
-#include "malloc.h"
 #include <stdalign.h>
 #include "hardware/dma.h"
 #include "hardware/pio.h"
@@ -203,7 +202,7 @@ static inline void* __not_in_flash_func(nf_memset)(void* ptr, int value, size_t 
     return ptr;
 }
 
-static void __not_in_flash_func(dma_handler_HDMI)() {
+static void __scratch_y("dma_handler_HDMI") dma_handler_HDMI() {
     static uint32_t inx_buf_dma;
     static uint line = 0;
     irq_inx++;

@@ -283,7 +283,18 @@ void (* WriteAccess)(void);
 
 db RiotRam[128] = {0};	/* RIOT RAM (must be zero initially) */
 db TIA[64] = {0};		/* TIA registers (also zeroed) */
+/*
+Krokodile Cart [3E] — 32 × 1K = 32K RAM (homebrew)
+M-Network [E7] — 1K + 4×256
+Superchip [F4SC/F6SC/F8SC] — 128
+CBS [FA] — 256
+CommaVid [CV] — 1/2K
+*/
+#if PICO_RP2040
+db Ram[2048] = {0};	/* no 3E support */
+#else
 db Ram[32768] = {0};	/* Extra RAM (used or not depends on bankswitch scheme) */
+#endif
 
 int Frame = 0;		/* Frame counter */
 int PrevFrame = 0;	/* Previous value of frame counter */

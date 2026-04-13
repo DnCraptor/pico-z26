@@ -532,7 +532,7 @@ uint16_t frequencies[] = { 252, 362, 366, 378, 396, 404, 408, 412, 416, 420, 424
     #ifdef CPU_FREQ
     uint8_t frequency_index = 0;
     #else
-    uint8_t frequency_index = 3;
+    uint8_t frequency_index = 0;
     #endif
 #else
 uint8_t frequency_index = 0;
