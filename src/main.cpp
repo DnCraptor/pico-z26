@@ -524,7 +524,7 @@ typedef struct __attribute__((__packed__)) {
     char value_list[45][20];
 } MenuItem;
 
-#if HDMI
+#if defined(VGA) || defined(HDMI)
 uint16_t frequencies[] = { 378, 396, 404, 408, 412, 416, 420, 424, 432, 504, 516, 524 };
 #else
 uint16_t frequencies[] = { 252, 362, 366, 378, 396, 404, 408, 412, 416, 420, 424, 432 };
@@ -900,11 +900,12 @@ static int16_t audio_buffer[AUDIO_BUFFER_LENGTH] = { 0 };
 void __time_critical_func(render_core)() {
     multicore_lockout_victim_init();
 
+    graphics_init();
+
     tuh_init(BOARD_TUH_RHPORT);
     ps2kbd.init_gpio();
     nespad_begin(clock_get_hz(clk_sys) / 1000, NES_GPIO_CLK, NES_GPIO_DATA, NES_GPIO_LAT);
 
-    graphics_init();
 
 #ifndef HWAY
     i2s_config = i2s_get_default_config();

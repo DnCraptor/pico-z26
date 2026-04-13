@@ -57,7 +57,7 @@ static bool is_flash_frame = false;
 static uint16_t palette[2][256];
 
 static uint32_t bg_color[2];
-static uint16_t palette16_mask = 0;
+static uint16_t palette16_mask = 0xc0c0;
 
 static uint text_buffer_width = 0;
 static uint text_buffer_height = 0;
@@ -347,9 +347,9 @@ void graphics_set_mode(enum graphics_mode_t mode) {
             text_buffer_width = 80;
             text_buffer_height = 30;
     }
-    if (graphics_buffer && graphics_mode != mode)
-        memset(graphics_buffer, 0, graphics_buffer_height * graphics_buffer_width);
-    clrScr(0);
+   // if (graphics_buffer && graphics_mode != mode)
+     //   memset(graphics_buffer, 0, graphics_buffer_height * graphics_buffer_width);
+//    clrScr(0);
     if (_SM_VGA < 0) return; // если  VGA не инициализирована -
 
     graphics_mode = mode;
@@ -400,15 +400,9 @@ void graphics_set_mode(enum graphics_mode_t mode) {
             TMPL_LINE8 = 0b11000000;
             HS_SHIFT = 328 * 2;
             HS_SIZE = 48 * 2;
-
             line_size = 400 * 2;
-
             shift_picture = line_size - HS_SHIFT;
-
-            palette16_mask = 0xc0c0;
-
             visible_line_size = 320;
-
             N_lines_total = 525;
             N_lines_visible = 480;
             line_VS_begin = 490;
