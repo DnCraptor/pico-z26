@@ -319,7 +319,8 @@ void filebrowser(const char pathname[256], const char executables[11]) {
 
     if (FR_OK != f_mount(&fs, "SD", 1)) {
         draw_text("SD Card not inserted or SD Card error!", 0, 0, 12, 0);
-        while (true);
+        sleep_ms(3000);
+        return;
     }
     f_mkdir(HOME_DIR);
 
@@ -1006,6 +1007,7 @@ int __time_critical_func(main)() {
         #endif
         reboot = false;
 
+        Reset_emulator();
         InitData();          // таблицы диспетчера, CPU, TIA, RIOT
         Init_Service();      // буферы экрана
         Controls();          // начальное состояние контроллеров
