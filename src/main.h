@@ -9,6 +9,10 @@ typedef struct __attribute__((__packed__)) {
     uint8_t save_slot;
     bool player1_hard;
     bool player2_hard;
+    char last_path[256];
+    char last_file[79];
+    int  last_offset;
+    int  last_item;
 } SETTINGS;
 
 extern SETTINGS settings;
@@ -30,6 +34,7 @@ extern input_bits_t gamepad2_bits;
 typedef struct kbd_s {
     input_bits_t bits;
     int8_t h_code;
+    bool delete_key;    
 } kbd_t;
 
 extern kbd_t keyboard;

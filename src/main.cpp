@@ -85,9 +85,13 @@ bool reboot = false;
 semaphore vga_start_semaphore;
 
 SETTINGS settings = {
-    .version = 2,
+    .version = 3,
     .swap_ab = false,
     .save_slot = 0,
+    .last_path = "\\z26",
+    .last_file = "",
+    .last_offset = 0,
+    .last_item = 0,
 };
 
 kbd_t keyboard = {
@@ -164,6 +168,7 @@ __not_in_flash_func(process_kbd_report)(hid_keyboard_report_t const* report, hid
     keyboard.h_code = h_code;
     keyboard.bits.start = isInReport(report, HID_KEY_ENTER) || isInReport(report, HID_KEY_KEYPAD_ENTER);
     keyboard.bits.select = isInReport(report, HID_KEY_BACKSPACE) || isInReport(report, HID_KEY_ESCAPE) || isInReport(report, HID_KEY_KEYPAD_ADD);
+    keyboard.delete_key  = isInReport(report, HID_KEY_DELETE) || isInReport(report, HID_KEY_KEYPAD_DECIMAL);
 
     keyboard.bits.a = isInReport(report, HID_KEY_Z) || isInReport(report, HID_KEY_O) || isInReport(report, HID_KEY_KEYPAD_0);
     keyboard.bits.b = isInReport(report, HID_KEY_X) || isInReport(report, HID_KEY_P) || isInReport(report, HID_KEY_KEYPAD_DECIMAL);
@@ -311,7 +316,11 @@ void filebrowser(const char pathname[256], const char executables[11]) {
     bool debounce = true;
     char basepath[256];
     char tmp[TEXTMODE_COLS + 1];
+    bool delete_debounce = false;
     strcpy(basepath, pathname);
+    if (settings.last_path[0] != '\0') {
+        strcpy(basepath, settings.last_path);
+    }
     constexpr int per_page = TEXTMODE_ROWS - 3;
 
     DIR dir;
@@ -387,6 +396,16 @@ void filebrowser(const char pathname[256], const char executables[11]) {
         int offset = 0;
         int current_item = 0;
 
+        if (strcmp(basepath, settings.last_path) == 0) {
+            offset       = settings.last_offset;
+            current_item = settings.last_item;
+            // clamp на случай если файлов стало меньше
+            if (offset + current_item >= total_files) {
+                offset = 0;
+                current_item = total_files - 1 > 0 ? total_files - 1 : 0;
+            }
+        }
+
         while (true) {
             sleep_ms(100);
 
@@ -435,6 +454,32 @@ void filebrowser(const char pathname[256], const char executables[11]) {
                     current_item = 0;
                 }
             }
+            // DEL — удалить файл под курсором
+            if (keyboard.delete_key && !delete_debounce) {
+                delete_debounce = true;
+                int idx = offset + current_item;
+                if (idx >= total_files) continue;
+                auto& item = fileItems[offset + current_item];
+                if (!item.is_directory) {
+                    char filepath[256];
+                    snprintf(filepath, sizeof(filepath), "%s\\%s", basepath, item.filename);
+                    if (f_unlink(filepath) != FR_OK) continue;
+
+                    // выбрать следующий/предыдущий файл
+                    int new_abs = offset + current_item;
+                    // перечитать каталог — выйти из внутреннего цикла
+                    // запомнить что хотим встать на new_abs или new_abs-1
+                    int new_total = total_files - 1;
+                    int target = (new_abs < new_total) ? new_abs : (new_total - 1);
+                    if (target < 0) target = 0;
+                    // сохранить в settings для восстановления после break
+                    settings.last_offset = target / per_page * per_page;
+                    settings.last_item   = target % per_page;
+                    strcpy(settings.last_path, basepath);
+                    break; // перечитать каталог
+                }
+            }
+            if (!keyboard.delete_key) delete_debounce = false;
 
             if (debounce && (gamepad1_bits.start || gamepad1_bits.a || gamepad1_bits.b)) {
                 auto file_at_cursor = fileItems[offset + current_item];
@@ -456,7 +501,11 @@ void filebrowser(const char pathname[256], const char executables[11]) {
 
                 if (file_at_cursor.is_executable) {
                     sprintf(tmp, "%s\\%s", basepath, file_at_cursor.filename);
-
+                    // сохранить позицию перед уходом
+                    strcpy(settings.last_path, basepath);
+                    strncpy(settings.last_file, file_at_cursor.filename, 78);
+                    settings.last_offset = offset;
+                    settings.last_item   = current_item;
                     filebrowser_loadfile(tmp);
                     return;
                 }
