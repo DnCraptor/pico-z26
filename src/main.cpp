@@ -1070,10 +1070,11 @@ int __time_critical_func(main)() {
         // a 2K ROM is mirrored to 4K in flash by filebrowser_loadfile
         CartSize = (rom_size == 2048 || rom_size == 0 || rom_size > 0x80000) ? 4096 : rom_size;
 
+        // Reset_emulator() already does InitData(), RecognizeCart(), SetupBanks(),
+        // Reset(), Init_Service() and Controls(). A second InitData() here would
+        // reset ReadAccess/WriteAccess to the plain 4K mapper and break every
+        // bankswitched cartridge (F8, F6, F4, SuperChip, ...).
         Reset_emulator();
-        InitData();          // таблицы диспетчера, CPU, TIA, RIOT
-        Init_Service();      // буферы экрана
-        Controls();          // начальное состояние контроллеров
         update_palette();
         if (settings.player1_hard) IOPortB |= 0x40; else IOPortB &= 0xbf;
         if (settings.player2_hard) IOPortB |= 0x80; else IOPortB &= 0x7f;
