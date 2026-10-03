@@ -202,7 +202,7 @@ static void __not_in_flash_func(F8SCRead)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
         if (a >= 0x1FF8)        ReadHotspotBS4K();
-        else if (a >= 0x1080)   ReadRAM128();
+        else if (a >= 0x1080 && a < 0x1100)   ReadRAM128();
 		// По спеке read window RAM — $1080-$10FF, а $1000-$107F — write window (read-trap). Здесь read-trap просто отдаёт ReadBS4K() — это намеренно или нужен отдельный обработчик?
         else                    ReadBS4K();
     } else {
@@ -475,7 +475,7 @@ static void __not_in_flash_func(F6SCRead)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
         if (a >= 0x1FF6)      ReadHotspotBS4K();
-        else if (a >= 0x1080) ReadRAM128();
+        else if (a >= 0x1080 && a < 0x1100) ReadRAM128();
         else                  ReadBS4K();
     } else {
         TIARIOTRead();
@@ -627,7 +627,7 @@ static void __not_in_flash_func(F4SCRead)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
         if (a >= 0x1FF4)       ReadHotspotBS4K();
-        else if (a >= 0x1080)  ReadRAM128();
+        else if (a >= 0x1080 && a < 0x1100)  ReadRAM128();
         else                   ReadBS4K();
     } else {
         TIARIOTRead();
