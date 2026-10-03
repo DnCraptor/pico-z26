@@ -287,7 +287,8 @@ bool filebrowser_loadfile(const char pathname[256]) {
     multicore_lockout_start_blocking();
     auto flash_target_offset = FLASH_TARGET_OFFSET;
     const uint32_t ints = save_and_disable_interrupts();
-    flash_range_erase(flash_target_offset, fileinfo.fsize);
+    // erase whole sectors: a 2K ROM still needs a full 4K sector (mirrored below)
+    flash_range_erase(flash_target_offset, (fileinfo.fsize + FLASH_SECTOR_SIZE - 1) & ~(FLASH_SECTOR_SIZE - 1));
     restore_interrupts(ints);
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
         uint8_t buffer[FLASH_PAGE_SIZE];
@@ -302,6 +303,16 @@ bool filebrowser_loadfile(const char pathname[256]) {
             }
         }
         while (bytes_read != 0);
+        if (fileinfo.fsize == 2048) {
+            // 2K cart: mirror $1000-$17FF to $1800-$1FFF, so the 4K mapper
+            // (and the reset vector at $1FFC) sees the ROM in both halves
+            for (uint32_t off = 0; off < 2048; off += FLASH_PAGE_SIZE) {
+                memcpy(buffer, (const void*)(XIP_BASE + FLASH_TARGET_OFFSET + off), FLASH_PAGE_SIZE);
+                const uint32_t ints = save_and_disable_interrupts();
+                flash_range_program(FLASH_TARGET_OFFSET + 2048 + off, buffer, FLASH_PAGE_SIZE);
+                restore_interrupts(ints);
+            }
+        }
         gpio_put(PICO_DEFAULT_LED_PIN, true);
     }
     f_close(&file);
@@ -1054,6 +1065,10 @@ int __time_critical_func(main)() {
             graphics_set_mode(GRAPHICSMODE_DEFAULT);
         #endif
         reboot = false;
+
+        // the bankswitch autodetection (SetupBanks) relies on the ROM size;
+        // a 2K ROM is mirrored to 4K in flash by filebrowser_loadfile
+        CartSize = (rom_size == 2048 || rom_size == 0 || rom_size > 0x80000) ? 4096 : rom_size;
 
         Reset_emulator();
         InitData();          // таблицы диспетчера, CPU, TIA, RIOT
