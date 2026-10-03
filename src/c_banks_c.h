@@ -201,7 +201,7 @@ void InitCV(void) {
 static void __not_in_flash_func(F8SCRead)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
-        if (a >= 0x1FF8)        ReadHotspotBS4K();
+        if (a >= 0x1FF8 && a <= 0x1FF9)        ReadHotspotBS4K();
         else if (a >= 0x1080 && a < 0x1100)   ReadRAM128();
 		// По спеке read window RAM — $1080-$10FF, а $1000-$107F — write window (read-trap). Здесь read-trap просто отдаёт ReadBS4K() — это намеренно или нужен отдельный обработчик?
         else                    ReadBS4K();
@@ -213,7 +213,7 @@ static void __not_in_flash_func(F8SCRead)(void) {
 static void __not_in_flash_func(F8SCWrite)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
-        if (a >= 0x1FF8)        WriteHotspotBS4K();
+        if (a >= 0x1FF8 && a <= 0x1FF9)        WriteHotspotBS4K();
         else if (a < 0x1080)    WriteRAM128();
         else                    WriteROM4K();
     } else {
@@ -474,7 +474,7 @@ void InitFE(void) {
 static void __not_in_flash_func(F6SCRead)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
-        if (a >= 0x1FF6)      ReadHotspotBS4K();
+        if (a >= 0x1FF6 && a <= 0x1FF9)      ReadHotspotBS4K();
         else if (a >= 0x1080 && a < 0x1100) ReadRAM128();
         else                  ReadBS4K();
     } else {
@@ -485,7 +485,7 @@ static void __not_in_flash_func(F6SCRead)(void) {
 static void __not_in_flash_func(F6SCWrite)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
-        if (a >= 0x1FF6)   WriteHotspotBS4K();
+        if (a >= 0x1FF6 && a <= 0x1FF9)   WriteHotspotBS4K();
         else if (a < 0x1080) WriteRAM128();
         else                 WriteROM4K();
     } else {
@@ -626,7 +626,7 @@ void InitE7(void) {
 static void __not_in_flash_func(F4SCRead)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
-        if (a >= 0x1FF4)       ReadHotspotBS4K();
+        if (a >= 0x1FF4 && a <= 0x1FFB)       ReadHotspotBS4K();
         else if (a >= 0x1080 && a < 0x1100)  ReadRAM128();
         else                   ReadBS4K();
     } else {
@@ -637,7 +637,7 @@ static void __not_in_flash_func(F4SCRead)(void) {
 static void __not_in_flash_func(F4SCWrite)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
-        if (a >= 0x1FF4)      WriteHotspotBS4K();
+        if (a >= 0x1FF4 && a <= 0x1FFB)      WriteHotspotBS4K();
         else if (a < 0x1080)  WriteRAM128();
         else                  WriteROM4K();
     } else {
@@ -661,7 +661,7 @@ void InitF4SC(void) {
 */
 static void __not_in_flash_func(F8Read)(void) {
     if (AddressBus & 0x1000) {
-        if ((AddressBus & 0x1FFF) >= 0x1FF8) ReadHotspotBS4K();
+        if ((AddressBus & 0x1FFF) >= 0x1FF8 && (AddressBus & 0x1FFF) <= 0x1FF9) ReadHotspotBS4K();
         else                                  ReadBS4K();
     } else {
         TIARIOTRead();
@@ -670,7 +670,7 @@ static void __not_in_flash_func(F8Read)(void) {
 
 static void __not_in_flash_func(F8Write)(void) {
     if (AddressBus & 0x1000) {
-        if ((AddressBus & 0x1FFF) >= 0x1FF8) WriteHotspotBS4K();
+        if ((AddressBus & 0x1FFF) >= 0x1FF8 && (AddressBus & 0x1FFF) <= 0x1FF9) WriteHotspotBS4K();
         else                                  WriteROM4K();
     } else {
         TIARIOTWrite();
@@ -798,7 +798,7 @@ void InitUA(void) {
 */
 static void __not_in_flash_func(EFRead)(void) {
     if (AddressBus & 0x1000) {
-        if ((AddressBus & 0x1FFF) >= 0x1FE0) ReadHotspotBS4K();
+        if ((AddressBus & 0x1FFF) >= 0x1FE0 && (AddressBus & 0x1FFF) <= 0x1FEF) ReadHotspotBS4K();
         else                                  ReadBS4K();
     } else {
         TIARIOTRead();
@@ -807,7 +807,7 @@ static void __not_in_flash_func(EFRead)(void) {
 
 static void __not_in_flash_func(EFWrite)(void) {
     if (AddressBus & 0x1000) {
-        if ((AddressBus & 0x1FFF) >= 0x1FE0) WriteHotspotBS4K();
+        if ((AddressBus & 0x1FFF) >= 0x1FE0 && (AddressBus & 0x1FFF) <= 0x1FEF) WriteHotspotBS4K();
         else                                  WriteROM4K();
     } else {
         TIARIOTWrite();
@@ -862,7 +862,7 @@ void InitSP(void);
 */
 static void __not_in_flash_func(F6Read)(void) {
     if (AddressBus & 0x1000) {
-        if ((AddressBus & 0x1FFF) >= 0x1FF6) ReadHotspotBS4K();
+        if ((AddressBus & 0x1FFF) >= 0x1FF6 && (AddressBus & 0x1FFF) <= 0x1FF9) ReadHotspotBS4K();
         else                                 ReadBS4K();
     } else {
         TIARIOTRead();
@@ -871,7 +871,7 @@ static void __not_in_flash_func(F6Read)(void) {
 
 static void __not_in_flash_func(F6Write)(void) {
     if (AddressBus & 0x1000) {
-        if ((AddressBus & 0x1FFF) >= 0x1FF6) WriteHotspotBS4K();
+        if ((AddressBus & 0x1FFF) >= 0x1FF6 && (AddressBus & 0x1FFF) <= 0x1FF9) WriteHotspotBS4K();
         else                                 WriteROM4K();
     } else {
         TIARIOTWrite();
@@ -900,7 +900,7 @@ void InitF6(void) {
 */
 static void __not_in_flash_func(F4Read)(void) {
     if (AddressBus & 0x1000) {
-        if ((AddressBus & 0x1FFF) >= 0x1FF4) ReadHotspotBS4K();
+        if ((AddressBus & 0x1FFF) >= 0x1FF4 && (AddressBus & 0x1FFF) <= 0x1FFB) ReadHotspotBS4K();
         else                                 ReadBS4K();
     } else {
         TIARIOTRead();
@@ -909,7 +909,7 @@ static void __not_in_flash_func(F4Read)(void) {
 
 static void __not_in_flash_func(F4Write)(void) {
     if (AddressBus & 0x1000) {
-        if ((AddressBus & 0x1FFF) >= 0x1FF4) WriteHotspotBS4K();
+        if ((AddressBus & 0x1FFF) >= 0x1FF4 && (AddressBus & 0x1FFF) <= 0x1FFB) WriteHotspotBS4K();
         else                                 WriteROM4K();
     } else {
         TIARIOTWrite();
@@ -968,8 +968,8 @@ void InitMB(void) {
 static void __not_in_flash_func(FARead)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
-        if (a >= 0x1FF8)       ReadHotspotBS4K();
-        else if (a >= 0x1100)  ReadRAM256();
+        if (a >= 0x1FF8 && a <= 0x1FFA)       ReadHotspotBS4K();
+        else if (a >= 0x1100 && a < 0x1200)  ReadRAM256();
         else                   ReadBS4K();
     } else {
         TIARIOTRead();
@@ -979,7 +979,7 @@ static void __not_in_flash_func(FARead)(void) {
 static void __not_in_flash_func(FAWrite)(void) {
     if (AddressBus & 0x1000) {
         dw a = AddressBus & 0x1FFF;
-        if (a >= 0x1FF8)      WriteHotspotBS4K();
+        if (a >= 0x1FF8 && a <= 0x1FFA)      WriteHotspotBS4K();
         else if (a < 0x1100)  WriteRAM256();
         else                  WriteROM4K();
     } else {
