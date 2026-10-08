@@ -263,6 +263,30 @@ bool isExecutable(const char *pathname, const char *extensions) {
     return false;
 }
 
+#ifndef PICO_RP2040
+static void flash_timings();
+#endif
+
+// flash_range_erase()/flash_range_program() leave XIP re-enabled through the
+// bootrom's XIP setup copy, with the flash clock divider the bootrom chose at
+// boot - far too fast once the core runs at 378 MHz. The caller below runs from
+// flash, so its very next instruction fetch could return garbage. These
+// wrappers run from RAM and restore our flash timings (flash_timings(), also
+// in RAM) before returning to flash code.
+static void __no_inline_not_in_flash_func(rom_flash_erase)(uint32_t offs, size_t count) {
+    flash_range_erase(offs, count);
+#ifndef PICO_RP2040
+    flash_timings();
+#endif
+}
+
+static void __no_inline_not_in_flash_func(rom_flash_program)(uint32_t offs, const uint8_t* data, size_t count) {
+    flash_range_program(offs, data, count);
+#ifndef PICO_RP2040
+    flash_timings();
+#endif
+}
+
 bool filebrowser_loadfile(const char pathname[256]) {
     UINT bytes_read = 0;
     FIL file;
@@ -288,7 +312,7 @@ bool filebrowser_loadfile(const char pathname[256]) {
     auto flash_target_offset = FLASH_TARGET_OFFSET;
     const uint32_t ints = save_and_disable_interrupts();
     // erase whole sectors: a 2K ROM still needs a full 4K sector (mirrored below)
-    flash_range_erase(flash_target_offset, (fileinfo.fsize + FLASH_SECTOR_SIZE - 1) & ~(FLASH_SECTOR_SIZE - 1));
+    rom_flash_erase(flash_target_offset, (fileinfo.fsize + FLASH_SECTOR_SIZE - 1) & ~(FLASH_SECTOR_SIZE - 1));
     restore_interrupts(ints);
     if (FR_OK == f_open(&file, pathname, FA_READ)) {
         uint8_t buffer[FLASH_PAGE_SIZE];
@@ -296,7 +320,7 @@ bool filebrowser_loadfile(const char pathname[256]) {
             f_read(&file, &buffer, FLASH_PAGE_SIZE, &bytes_read);
             if (bytes_read) {
                 const uint32_t ints = save_and_disable_interrupts();
-                flash_range_program(flash_target_offset, buffer, FLASH_PAGE_SIZE);
+                rom_flash_program(flash_target_offset, buffer, FLASH_PAGE_SIZE);
                 restore_interrupts(ints);
                 gpio_put(PICO_DEFAULT_LED_PIN, flash_target_offset >> 13 & 1);
                 flash_target_offset += FLASH_PAGE_SIZE;
@@ -309,7 +333,7 @@ bool filebrowser_loadfile(const char pathname[256]) {
             for (uint32_t off = 0; off < 2048; off += FLASH_PAGE_SIZE) {
                 memcpy(buffer, (const void*)(XIP_BASE + FLASH_TARGET_OFFSET + off), FLASH_PAGE_SIZE);
                 const uint32_t ints = save_and_disable_interrupts();
-                flash_range_program(FLASH_TARGET_OFFSET + 2048 + off, buffer, FLASH_PAGE_SIZE);
+                rom_flash_program(FLASH_TARGET_OFFSET + 2048 + off, buffer, FLASH_PAGE_SIZE);
                 restore_interrupts(ints);
             }
         }
@@ -758,7 +782,13 @@ const MenuItem menu_items[] = {
 {
     "Overclocking: %s MHz", ARRAY, &frequency_index, &overclock, count_of(frequencies) - 1,
 #if HDMI
+#if CPU_FREQ
+#define STRINGIFY_IMPL(x) #x
+#define STRINGIFY(x) STRINGIFY_IMPL(x)
+    { STRINGIFY(CPU_FREQ), "396", "404", "408", "412", "416", "420", "424", "432", "504", "516", "524" }
+#else
     { "378", "396", "404", "408", "412", "416", "420", "424", "432", "504", "516", "524" }
+#endif
 #else
     { "252", "362", "366", "378", "396", "404", "408", "412", "416", "420", "424", "432" }
 #endif

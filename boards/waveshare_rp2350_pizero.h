@@ -81,6 +81,11 @@ pico_board_cmake_set_default(PICO_RP2350_A2_SUPPORTED, 1)
 
 #define ZERO2 1
 
+// 252 MHz: the PIO HDMI serializer then runs with an integer clock divider.
+// At 378 MHz (divider 1.5) the reference z0p2 shows snow and lost sync with
+// this HDMI driver; murmapple behaves the same on this board.
+#define CPU_FREQ 252
+
 // SDCARD
 #define SDCARD_SPI_BUS spi1
 #define SDCARD_PIN_SPI0_SCK 30
@@ -88,13 +93,13 @@ pico_board_cmake_set_default(PICO_RP2350_A2_SUPPORTED, 1)
 #define SDCARD_PIN_SPI0_MISO 40
 #define SDCARD_PIN_SPI0_CS 43
 
-// PS2KBD
-#define PS2KBD_GPIO_FIRST 0
+// PS2KBD: CLK GP2, DATA GP3 (as in MOS2, pico-nes and murm386 for z0p2)
+#define PS2KBD_GPIO_FIRST 2
 
-// NES Gamepad
-#define NES_GPIO_CLK 7
-#define NES_GPIO_LAT 8
-#define NES_GPIO_DATA 9
+// NES Gamepad: CLK GP4, LATCH GP5, DATA GP7 (as in MOS2 and pico-nes for z0p2)
+#define NES_GPIO_CLK 4
+#define NES_GPIO_LAT 5
+#define NES_GPIO_DATA 7
 
 // HDMI 8 pins starts from pin:
 #define HDMI_BASE_PIN 32

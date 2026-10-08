@@ -18,15 +18,15 @@ set(PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR}/boards )
 set(PICO_PLATFORM "rp2350" CACHE STRING "Chip type")
 #set(PICO_BOARD "murmulator" CACHE STRING "Board type")
 #set(PICO_BOARD "murmulator2" CACHE STRING "Board type")
-set(PICO_BOARD "olimex-pico-pc" CACHE STRING "Board type")
+#set(PICO_BOARD "olimex-pico-pc" CACHE STRING "Board type")
 #set(PICO_BOARD "waveshare_rp2040_pizero" CACHE STRING "Board type")
-#set(PICO_BOARD "waveshare_rp2350_pizero" CACHE STRING "Board type")
+set(PICO_BOARD "waveshare_rp2350_pizero" CACHE STRING "Board type")
 include(pico_sdk_import.cmake)
 
 project(z26 C CXX ASM)
 SET(BUILD_NAME "${PROJECT_NAME}")
 
-option(I2S "Enable I2S sound" OFF)
+option(I2S "Enable I2S sound" ON)
 option(HWAY "Enable Hardware AY-3-8910 sound" OFF)
 option(I2S_CS4334 "Enable I2S CS4334 sound" OFF)
 option(VGA "Enable VGA" OFF)
@@ -209,6 +209,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
 		PICO_FLASH_SIZE_BYTES=16777216
+		# core 0 stack: the whole SCRATCH_Y (4 KB); the file browser needs
+		# ~2.3 KB (see dma_handler_HDMI in drivers/hdmi/hdmi.c). Core 1 keeps
+		# 2 KB in SCRATCH_X (its default would follow PICO_STACK_SIZE).
+		PICO_STACK_SIZE=0x1000
+		PICO_CORE1_STACK_SIZE=0x800
 		# SDCARD
 		SDCARD_PIN_SPI0_CS=5
 		SDCARD_PIN_SPI0_SCK=2

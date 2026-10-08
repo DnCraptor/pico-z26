@@ -26,7 +26,7 @@ static uint32_t palette[256];
 #define SCREEN_WIDTH (320)
 #define SCREEN_HEIGHT (240)
 //графический буфер
-static uint8_t* __scratch_y("hdmi_ptr_1") graphics_buffer = NULL;
+static uint8_t* __scratch_x("hdmi_ptr_1") graphics_buffer = NULL;
 static int graphics_buffer_width = 0;
 static int graphics_buffer_height = 0;
 static int graphics_buffer_stride = 240;
@@ -47,8 +47,8 @@ static int dma_chan_pal_conv;
 
 //DMA буферы
 //основные строчные данные
-static uint32_t* __scratch_y("hdmi_ptr_3") dma_lines[2] = {NULL,NULL};
-static uint32_t* __scratch_y("hdmi_ptr_4") DMA_BUF_ADDR[2];
+static uint32_t* __scratch_x("hdmi_ptr_3") dma_lines[2] = {NULL,NULL};
+static uint32_t* __scratch_x("hdmi_ptr_4") DMA_BUF_ADDR[2];
 
 //ДМА палитра для конвертации
 //в хвосте этой памяти выделяется dma_data
@@ -202,7 +202,13 @@ static inline void* __not_in_flash_func(nf_memset)(void* ptr, int value, size_t 
     return ptr;
 }
 
-static void __scratch_y("dma_handler_HDMI") dma_handler_HDMI() {
+// The line IRQ and its DMA pointers live in SCRATCH_X, next to the core 1 stack
+// (the IRQ runs on core 1). SCRATCH_Y is left to the core 0 stack: it grows
+// down from the top of SCRATCH_Y, and the file browser alone needs ~2.3 KB
+// (filebrowser + filebrowser_loadfile + f_open), more than the default 2 KB.
+// With these pointers in SCRATCH_Y, loading a ROM overwrote DMA_BUF_ADDR and
+// the video DMA stopped (black screen, no HDMI signal).
+static void __scratch_x("dma_handler_HDMI") dma_handler_HDMI() {
     static uint32_t inx_buf_dma;
     static uint line = 0;
     irq_inx++;
@@ -436,7 +442,7 @@ static inline bool hdmi_init() {
     pio_sm_set_consecutive_pindirs(PIO_VIDEO, SM_video, HDMI_BASE_PIN, 8, true);
     pio_sm_set_consecutive_pindirs(PIO_VIDEO_ADDR, SM_conv, HDMI_BASE_PIN, 8, true);
 
-    uint64_t mask64 = (uint64_t)(3u << beginHDMI_PIN_clk);
+    uint64_t mask64 = (uint64_t)3u << beginHDMI_PIN_clk; // 64-bit shift: clock pins are GPIO38/39
     pio_sm_set_pins_with_mask64(PIO_VIDEO, SM_video, mask64, mask64);
     pio_sm_set_pindirs_with_mask64(PIO_VIDEO, SM_video, mask64, mask64);
     // пины
